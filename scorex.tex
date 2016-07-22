@@ -30,18 +30,22 @@
 % \end{abstract}
 
 \chapter{Introduction}
+
 This is a guide to the blockchain data structure and digital currencies built on top of it. Unlike previous guides we do not start with an example of Alice sending a signed note to Bob. Instead, we describing data structures and a process of building them. The guide is made for people understanding basic data structures like sets and append logs. No cryptography knowledge is needed.
 
-	We will explain cryptography in very layman terms. For good explanation of cryptography primitives and protocols please refer to~\cite{}. 
+We will explain cryptography in very layman terms. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
 
-	We will describe basic concepts with code snippets in Scala language. No prior knowledge of the Scala language is required.
+We will describe basic concepts with code snippets in Scala language. No prior knowledge of the Scala language is required.
 
-	[TODO: review of previous tutorials]
+\section{Other Introductions}
+
+	[TODO: review of other tutorials]
+
 
 \chapter{Cryptocurrency Design}             % chapter 1
 \section{Introduction}     % section 1.1
 
-Blockchain is prefix-immutable append log of non-conflicting authenticated events happen in a decentralized peer-to-peer network. Simple, eh? \textit{But what all this actually means?}
+Blockchain is a prefix-immutable append log of non-conflicting authenticated events happen in a decentralized peer-to-peer network. Simple, eh? \textit{But what all this actually means?}
 
 Simply said, we have peers do not trust each other, and there is no any trusted party, only a strict protocol peers need to follow. Peers are issuing authenticated(e.g. signed) events of some semantics. For example, they are signing payment transactions. Or they are registering \(name \rightarrow value\) correspondences in a shared database(certificates, domains). ``Prefix-immutable append log'' means all the peers following are agree on append log which prefix is immutable(with non-negligible probability). That is, if we cut suffix of some length from an log a peer holds for each peer, results will be the same. And events in the ordered log must be non-conflicting in order to have consistent history.
 
