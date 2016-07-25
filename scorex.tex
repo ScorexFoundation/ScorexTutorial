@@ -108,18 +108,27 @@ How to open a box? We can protect a box with a script in Bitcoin language. Or we
 
 \subsection{Namecoin}
 
+Namecoin, in addition to token transfers, introduce \textit{name} $\rightarrow$ \textit{value} storage. In general, values could be arbitrary, but there are few  standard namespaces with predefined semantics, for domains and identities.
+
+We do not specify Namecoin design precisely below, but something Namecoin-like. 
+
+Consider a transaction contains a box with \textit{name\_register} command specifying a \textit{name} $\rightarrow$ \textit{value} correspondence. Such a box has zero value and associated with a public key. 
+
+
 \subsection{Nxt and Ethereum}	
 
-Having a Bitcoin wallet, you can be goggled by complexity of boxes and propositions in form of stack-based scripts. Why not to just have account and token transfers between them? 
+Having a Bitcoin wallet, you can be goggled by complexity of boxes and propositions in form of stack-based scripts. Why not to have just accounts and token transfers between them instead? 
 
-Actually some of Bitcoin successors walked this path. For example, Nxt has a dedicated notion of accounts. An account is associated with its public key. Then a just transaction transfers tokens from one account to another and needed to be signed by a sender. For such a system stateful verification needs for a minimal state in form of table holding a correspondence between accounts and their balances.
+Actually some of Bitcoin successors walked this path. For example, Nxt has a dedicated notion of accounts. An account is associated with its public key. A transaction transfers tokens from one account to another and needed to be signed by the sender. For such a system stateful verification needs for a minimal state in form of table holding a correspondence between accounts and their balances.
 
-However, with such a design we have a problem. Let's describe it with an example. Alice has 50 tokens at some moment of time. At this moment she issues a signed transaction to pay 5 tokens to Bob. A node can validate the transaction and found it valid, and so applicable. After the application Alice has 45 tokens. But how to prevent second application of the transaction? Our minimal state representation seems to be flawed.
+With such a simple minimal state design we have a problem though. Let's describe it with an example. Alice has 50 tokens at some moment of time. She issues a signed transaction to pay 5 tokens to Bob. A node can validate the transaction and found it valid, and so applicable. After the application Alice has 45 tokens. But how to prevent second application of the transaction? Our minimal state representation seems to be flawed.
 
-Ethereum solves the problem by modifying minimal state representation adding ``nonce'' value to it. That is, minimal state is not about (public key -> balance) correspondence anymore, but (public key -> (nonce, balance)). Transaction contains nonce value \(txnonce\) as well, and transaction is valid and so applicable only if \(txnonce = nonce + 1\). By application, \(nonce := txnonce\). 
+Ethereum solves the problem by modifying minimal state representation adding ``nonce'' value to it. That is, minimal state is not about (public key $\rightarrow$ balance) correspondence anymore, but (public key $\rightarrow$ (nonce, balance)). Transaction contains nonce value \(txnonce\) as well, and transaction is valid and so applicable only if \(txnonce = nonce + 1\). By application, \(nonce := txnonce\). 
 
 Unlike Bitcoin, Ethereum sets strict order of transactions issued by an account. In Bitcoin, transactions could be applied in any order, 
 if they are spending non-overlapping sets of outputs, and input of one transaction does not spend an output of another. In Ethereum, order of transaction is set by nonce values. 
+
+
 
 \subsection{Transactional Metadata}
 
@@ -127,6 +136,7 @@ if they are spending non-overlapping sets of outputs, and input of one transacti
 
 Along with transactions, we can put some aggregated data about them. For example. in Bitcoin's block a root hash of a Merkle tree for the transactions in block is put into the block. That way it is possible for nodes in a network to exchange not full blocks but \textit{blockheaders}. A \textit{blockheader} is a block without its transactions. By including transactions root hash into the blockheader it is possible to have it spread around a network and be sure it is impossible to show transactions set other that was included. 
 
+[TODO: Bitcoin example]
 
 \section{Consensus}
 
