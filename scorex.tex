@@ -110,9 +110,11 @@ How to open a box? We can protect a box with a script in Bitcoin language. Or we
 
 Namecoin, in addition to token transfers, introduce \textit{name} $\rightarrow$ \textit{value} storage. In general, values could be arbitrary, but there are few  standard namespaces with predefined semantics, for domains and identities.
 
-We do not specify Namecoin design precisely below, but something Namecoin-like. 
+We do not specify Namecoin design precisely below, but some Namecoin-like design. 
 
-Consider a transaction contains a box with \textit{name\_register} command specifying a \textit{name} $\rightarrow$ \textit{value} correspondence. Such a box has zero value and associated with a public key. 
+Consider a transaction contains a box with \textit{name\_register} command specifying a \textit{name} $\rightarrow$ \textit{value} correspondence. Such a box has zero value and associated with a public key \(pk\). It is demanded to pay some fee in order to put such a box into state. The box lives in the state for some period of time, then it is considered as expired and could be thrown away from a minimal state. It is possible to renew or transfer ownership to a different public key by publishing a \textit{name\_update} box replacing an original one in the state.
+
+This design has a critical flow. A block generator could refuse to include \textit{name\_register} command into a block and put its own value for the same name. This is an example of \textit{frontrunning attack}, when an original transaction is suppressed by another one issued by an attacker. In order to avoid frontrunning attacks, Namecoin has \textit{name\_new} command to announce the intention to register a name by providing its hash value.
 
 
 \subsection{Nxt and Ethereum}	
