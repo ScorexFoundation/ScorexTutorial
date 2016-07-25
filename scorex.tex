@@ -88,23 +88,23 @@ In this section we define a generalized view of transactional semantics of a blo
 	\end{proposition}	
 	\begin{proof}Consider the nodes have the same minimal state and trying to apply the same block to it. By the Axiom 2, they will have the same minimal state as result, as verification and application procedures are deterministic. By the Axiom 1, genesis state is the same for all the nodes. By induction, result of sequential applying of blocks in the sequence results in the same minimal states for all the nodes.\end{proof}
 
+[TODO: claim that ``state'' -> ``minimal state'']
+
+
 
 \subsection{Bitcoin}
 
-In Bitcoin a transaction contains multiple \textit{inputs} and \textit{outputs}. Inputs are connected with outputs of transactions previously applied to a state, and the connected outputs must not be spent yet. That is, the outputs do not have connections from transactions previously 
-applied to a state. Thus an output could be spent as whole only and so we can consider a set of unspent outputs as a minimal state.
+In Bitcoin a transaction contains multiple \textit{inputs} and \textit{outputs}. Inputs are connected with outputs of transactions previously applied to a state, and the connected outputs must not be spent yet. That is, the outputs to be connected by the inputs of the transactions do not have connections from transactions previously applied to the state. Thus an output could be spent as whole only and so we can consider a set of unspent outputs as a minimal state.
 
-How to spend an output? In Bitcoin it contains a script in a stack-based language. Input also contains a script. Then an input could spend an output if a combined script of inputs' and then outputs' could be executed and results in non-zero top stack item.
+How to spend an output? In Bitcoin it contains a script in a stack-based language. Input also contains a script. Then an input could spend an output if a combined script made of inputs' and then outputs' could be executed and results in non-zero top stack item.
 
 [TODO: example]
 
 \subsection{Boxes, Propositions and Proofs}
 
-Abstracting the Bitcoin-like model, a minimal state could be represented as a set of \textit{closed boxes} of size \(n_S\). Each box has a value associated with it. A transaction opens \(n_k\) boxes and also creates \(n_b\) new closed boxes. The resulting state set has the size of \(n_S-n_k+n_b\) after applying the transaction to it. 
+Abstracting the Bitcoin-like model, a minimal state could be represented as a set of \textit{closed boxes} of size \(n_S\). Each box has a value associated with it. Say, a transaction opens \(n_k\) boxes and also creates \(n_b\) new closed boxes, then the resulting state set has the size of \(n_S-n_k+n_b\) after applying the transaction to it. 
 
-How to open a box? We can protect a box with a script in Bitcoin language. Or we can put a public key into closed box and in order to open it with a signature verifiable with the public key~(we will consider details further). To describe these approaches as well as many others possible in a general way, we say a box is protected by a \textit{proposition} of some kind, and in order to open it, a \textit{proof} of the same kind must be provided. There are some tricky details we will discuss further.
-
-[TODO: examples and ]
+How to open a box? We can protect a box with a script in Bitcoin language. Or we can put a public key into closed box and then it is possible to open it with a proof of private key knowledge, a signature~(we will consider details further). To describe these approaches as well as many others possible in a general way, we say a box is protected by a \textit{proposition} of some kind, and in order to open it, a \textit{proof} of the same kind must be provided. There are some tricky details we will discuss further.
 
 \subsection{Namecoin}
 
