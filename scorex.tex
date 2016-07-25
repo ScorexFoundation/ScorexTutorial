@@ -21,9 +21,9 @@
 
 \lstset{language=Scala}
 
-\title{On Blockchains And Scorex}   % type title between braces
-\author{Alexander Chepurnoy}         % type author(s) between braces
-\date{June, 2016}    % type date between braces
+\title{Blockchain Systems General Design And Scorex}
+\author{Alexander Chepurnoy}         
+\date{June-August, 2016}
 \maketitle
 
 % \begin{abstract}  
@@ -31,7 +31,7 @@
 
 \chapter{Introduction}
 
-This is a guide to the blockchain data structure and digital currencies built on top of it. Unlike previous guides we do not start with an example of Alice sending a signed note to Bob. Instead, we describe data structures and a process of building them in a decentralized environment. The guide is made for people understanding basic data structures like sets and append logs. No cryptography knowledge is needed.
+This is the guide to the blockchain data structure and digital currencies built on top of it. Unlike previous guides we do not start with an example of Alice sending a signed note to Bob. Instead, we describe data structures and a process of building them in a decentralized environment. The guide is made for people understanding basic data structures like sets and append logs. No cryptography knowledge is needed.
 
 We will explain cryptography in very layman terms. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
 
@@ -63,11 +63,11 @@ In this section we define a generalized view of transactional semantics of a blo
 		\item Apply it if so
     \end{enumerate}
 
-	Intuitively, there are some stateless checks, e.g. whether a signature for a transaction is valid, whether amount of tokens to transfer is non-negative, but also there are stateful ones. For example, if Alice is sending tokens to Bob, a node must be sure Alice has enough funds in order to make a payment.
+	Intuitively, there are some stateless checks, e.g. whether a signature for a transaction is valid, whether amount of tokens to transfer is non-negative, but also there are stateful ones. For example, if Alice is sending tokens to Bob, a node must be sure Alice has enough funds in order to make a payment. Or, if Alice is registering a domain, a node must be sure it is not taken yet. 
 
-	So a node needs to store some state in order to validate incoming transactions. There is some greatest lower bound for a type of a state for the whole network. That is, there is some \textit{minimal state} representation enough to validate an arbitrary transaction while removing any element from the representation eliminating this property. So all the nodes share this minimal state but a node could also store some additional information. 
+	So a node needs to store some state in order to validate incoming transactions. And there is some \textit{minimal state} representation enough to validate an arbitrary transaction while removing any element from the representation eliminating this property. So all the nodes share this minimal state but a node could also store some additional information. 
 
-	By applying transaction a minimal state is being modified. It should be impossible to apply a transaction already processed. 
+	By applying a transaction a minimal state is being modified. It should be impossible to apply a transaction already processed. 
 
 	For many reasons almost all cryptocurrencies of today are packing transactions into \textit{blocks}. We can think about a block as of \textit{atomic batch state update}. 
 
@@ -81,21 +81,17 @@ In this section we define a generalized view of transactional semantics of a blo
 	\end{axiom}
 
     \begin{axiom} 
-     Validation and application of a transaction are deterministic procedures. All the honest nodes follow the same rules. 
+     Validation and application of a transactions(and possibly an additional metadata) are deterministic procedures. All the honest nodes follow the same rules. 
     \end{axiom}
 
-	\begin{axiom} 
-	 Validation and application of a transactional metadata are deterministic. All the honest nodes follow the same rules. 
-	\end{axiom}
-
-	\begin{proposition} If the same sequence of blocks is applied to the genesis state for two different nodes, then the resulting minimal state will be the same.
+	\begin{proposition} If the same sequence of blocks is applied to the genesis state for two different nodes, then the resulting minimal states will be the same.
 	\end{proposition}	
-	\begin{proof} Consider the nodes have the same minimal state and applying the same block to it. \end{proof}
+	\begin{proof}Consider the nodes have the same minimal state and trying to apply the same block to it. By the Axiom 2, they will have the same minimal state as result, as verification and application procedures are deterministic. By the Axiom 1, genesis state is the same for all the nodes. By induction, result of sequential applying of blocks in the sequence results in the same minimal states for all the nodes.\end{proof}
 
 
 \subsection{Bitcoin}
 
-In Bitcoin a transaction contains multiple \textit{inputs} and \textit{outputs}. Inputs are connected with outputs of transactions previously applied to a state, and the outputs must not be spent yet. That is, the outputs do not have connections from transactions previously 
+In Bitcoin a transaction contains multiple \textit{inputs} and \textit{outputs}. Inputs are connected with outputs of transactions previously applied to a state, and the connected outputs must not be spent yet. That is, the outputs do not have connections from transactions previously 
 applied to a state. Thus an output could be spent as whole only and so we can consider a set of unspent outputs as a minimal state.
 
 How to spend an output? In Bitcoin it contains a script in a stack-based language. Input also contains a script. Then an input could spend an output if a combined script of inputs' and then outputs' could be executed and results in non-zero top stack item.
@@ -109,6 +105,8 @@ Abstracting the Bitcoin-like model, a minimal state could be represented as a se
 How to open a box? We can protect a box with a script in Bitcoin language. Or we can put a public key into closed box and in order to open it with a signature verifiable with the public key~(we will consider details further). To describe these approaches as well as many others possible in a general way, we say a box is protected by a \textit{proposition} of some kind, and in order to open it, a \textit{proof} of the same kind must be provided. There are some tricky details we will discuss further.
 
 [TODO: examples and ]
+
+\subsection{Namecoin}
 
 \subsection{Nxt and Ethereum}	
 
