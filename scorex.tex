@@ -51,9 +51,16 @@ Simply said, there are peers do not trust each other. There is no any trusted pa
 
 Consider Bitcoin as an example. Peers are holding money in form of algorithmically issued tokens. They do not trust each other, and do not to seek for a trusted mediator. Instead, they are running a Bitcoin protocol which builds prefix-immutable append log containing token transfers. Last few versions of the log are considered potentially unstable, but before them the history is considered as irreversible. The payments history is flawless, so, for example, if Alice had sent all her tokens to Bob, she can't send anything after that and before receiving tokens from other party.
 
+\section{Cryptography}
+
+[TODO: public key cryptography]
+
+[TODO: hash functions]
+
+
 \section{Transactional Layer}
 
-In this section we define a generalized view of transactional semantics of a blockchain system.
+In this section we define a generalized view of transactional semantics of a blockchain system. The two foundational concepts here is a \textit{state} and a \textit{transaction}.
 
 \subsection{Minimal State}     % section 1.1
 	Consider a transaction arrived at a node. The node is doing following on receiving it:
@@ -86,7 +93,7 @@ In this section we define a generalized view of transactional semantics of a blo
 
 	\begin{proposition} If the same sequence of blocks is applied to the genesis state for two different nodes, then the resulting minimal states will be the same.
 	\end{proposition}	
-	\begin{proof}Consider the nodes have the same minimal state and trying to apply the same block to it. By the Axiom 2, they will have the same minimal state as result, as verification and application procedures are deterministic. By the Axiom 1, genesis state is the same for all the nodes. By induction, result of sequential applying of blocks in the sequence results in the same minimal states for all the nodes.\end{proof}
+	\begin{proof}Consider the nodes have the same minimal state and trying to apply the same block to it. By the Axiom 2, they will have the same minimal state as result, as verification and application procedures are deterministic. By the Axiom 1, genesis state is the same for all the nodes. By induction, result of sequential applying of the blocks results in the same minimal states for all the nodes.\end{proof}
 
 [TODO: claim that ``state'' -> ``minimal state'']
 
@@ -133,6 +140,8 @@ if they are spending non-overlapping sets of outputs, and input of one transacti
 
 
 \subsection{Transactional Metadata}
+
+Assume we have a set of objects serializable to a set of unique byte arrays. We want to \textit{authenticate} these binary representations in an efficient. That is, we want to calculate a fixed-sized value for a whole set such as a single bit change always results in a change of the \textit{authenticating}~(or \textit{root}) value, and the value is collision-resistant, so it is impossible(with non-negligible probability) to generate different set resulting in the same root value. 
 
 [TODO: Merkle tree / authenticated data structures explanation]
 
@@ -379,4 +388,4 @@ The module contains an implementation of Permacoin consensus protocol~\cite{mill
 \bibliographystyle{}
 \bibliography{sources.bib}
 
-\end{document}
+\end{document}	
