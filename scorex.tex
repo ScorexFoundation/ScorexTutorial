@@ -95,8 +95,7 @@ In this section we define a generalized view of transactional semantics of a blo
 	\end{proposition}	
 	\begin{proof}Consider the nodes have the same minimal state and trying to apply the same block to it. By the Axiom 2, they will have the same minimal state as result, as verification and application procedures are deterministic. By the Axiom 1, genesis state is the same for all the nodes. By induction, result of sequential applying of the blocks results in the same minimal states for all the nodes.\end{proof}
 
-[TODO: claim that ``state'' -> ``minimal state'']
-
+Further we will use both the terms ``minimal state'' and ``state'' interchangeably. 
 
 
 \subsection{Bitcoin}
@@ -149,6 +148,25 @@ Along with transactions, we can put some aggregated data about them. For example
 
 [TODO: Bitcoin example]
 
+\subsection{Transactional Layer Generalization}
+
+After the examples, let's summarize what we have in common in all the observable cryptocurrencies.
+
+\begin{enumeration}
+\item{A Proposition And A Proof}
+In an every imaginable blockchain we have objects to be protected by secret owners. To achieve the property of being protected we introduce a proposition, and an object could be modified or destroyed only by presenting a proof satisfying a proposition. There are a lot of possible instantiations, e.g. Bitcoin scripts or digital signatures. 
+\item{Box Structure}
+There is a minimal element of a replicated state we are calling a \textit{box}. A box is protected by a proposition. It is possible to modify it or destroy it only by showing a proof satisfying a proposition. 
+\item{Minimal State}
+Minimal state is a most compact structure giving an ability to verify a transaction against it. Minimal state is about a set of boxes. 
+\item{Transaction And Transactional Language}
+Transaction is a smallest possible atomic state modifier. A transaction is to be verified against a state in a deterministic fashion~(so given a state and a transaction, two nodes will always give the same validation result whether \textit{true} or \textit{false}). If a transaction is valid against a state it could modify the state. Validation and application rules are individual~(Ethereum even brings quasi Turing completeness here).
+\item{Block}
+\end{enumeration}
+
+
+[TODO: wallet section?]
+
 \section{Consensus}
 
 We have proven(in the proposition~[?]) that if the same sequence of blocks carrying transactions is applied to the same genesis state for two node then they will have the same state. It is exactly what do we want to achieve, but how to have the same sequence of blocks for all the nodes? 
@@ -178,14 +196,28 @@ For a blockchain consensus protocols, we can state following properties:
 
 \subsection{Proof-of-Work}
 
-Proof-of-Work consensus protocol introduced in the foundational paper of Bitcoin~\cite{Nakamoto2008} was the 
+Proof-of-Work consensus protocol introduced in the foundational paper of Bitcoin~\cite{Nakamoto2008} is in the core of Bitcoin, Ethereum as well as many other cryptocurrencies. The basic idea of the protocol is to force miners to iterate over output of some function with a small probability of success per iteration. A successful result is giving a right to generate a block. The probability is adjusted automatically via \textit{difficulty} parameter \(D\). 
 
+In case of Bitcoin, the function is just a hash function, but what is about its input? 
 
+We want to make blocks immutable after creation. For that, we are applying hash function for all the block contents. 
+
+[TODO: Merkle tree]
+
+We also want for a block to refer to a previous block. So we include a hash of a previous block, in this case it in order to replace a block with another one it is needed to replace all its descendants also. As some amount of work is needed to generate each block in order to replace a chain suffix of length \(l\), amount of work proportional to \(l\) is needed.
+
+With Proof-of-Work it is impossible to make a false claim on successful block generation. Such a claim is easily verifiable, as calling hash function is very cheap. Thus a Proof-of-Work works as a protection against Sybil attacks~\cite{}.
 
 \subsection{Proof-of-Stake}
 
-\subsection{History}       % subsection 1.1.1
+There are some disadvantages of Proof-of-Work schemes. A lot of resources to be spent. During early days a Proof-of-Work currency could be destroyed by a miner already having a lot of computational resources working for another blockchain. 
 
+
+
+\subsection{History}
+
+
+\subsection{Consensus Layer Generalization}
 
 \section{Peer-to-Peer Network}	
 
