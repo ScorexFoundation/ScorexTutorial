@@ -37,6 +37,8 @@ We will explain cryptography in very layman terms. For good explanation of crypt
 
 In the first chapter we describe basic building blocks of a blockchain system. In the second chapter we describe how the blocks are implemented in the Scorex framework. We provide code snippets in Scala language. No prior knowledge of the Scala language is required.
 
+\section{Background}
+
 \section{Other Tutorials}
 
 ``How the Bitcoin protocol actually works'' tutorial by Michael Nielsen~\cite{nielsen} define problems led to the creation of Bitcoin and how the cryptocurrency solved them. The original Bitcoin whitepaper by Satoshi Nakamoto~\cite{Nakamoto2008} still provides very good description of basic concepts of Bitcoin. Details of Bitcoin technicalities could be found in the ``Mastering Bitcoin'' book~\cite{antonopoulos2014mastering}.
@@ -152,7 +154,7 @@ Along with transactions, we can put some aggregated data about them. For example
 
 After the examples, let's summarize what we have in common in all the observable cryptocurrencies.
 
-\begin{enumeration}
+\begin{enumerate}
 \item{A Proposition And A Proof}
 In an every imaginable blockchain we have objects to be protected by secret owners. To achieve the property of being protected we introduce a proposition, and an object could be modified or destroyed only by presenting a proof satisfying a proposition. There are a lot of possible instantiations, e.g. Bitcoin scripts or digital signatures. 
 \item{Box Structure}
@@ -162,7 +164,8 @@ Minimal state is a most compact structure giving an ability to verify a transact
 \item{Transaction And Transactional Language}
 Transaction is a smallest possible atomic state modifier. A transaction is to be verified against a state in a deterministic fashion~(so given a state and a transaction, two nodes will always give the same validation result whether \textit{true} or \textit{false}). If a transaction is valid against a state it could modify the state. Validation and application rules are individual~(Ethereum even brings quasi Turing completeness here).
 \item{Block}
-\end{enumeration}
+All the blockchain systems are storing transactions in full blocks. Most of them also have some authenticating value for the set of block transactions included into block thus it is possible to use block headers instead of full blocks in many scenarios in order to reduce a load.
+\end{enumerate}
 
 
 [TODO: wallet section?]
@@ -212,9 +215,17 @@ With Proof-of-Work it is impossible to make a false claim on successful block ge
 
 There are some disadvantages of Proof-of-Work schemes. A lot of resources to be spent. During early days a Proof-of-Work currency could be destroyed by a miner already having a lot of computational resources working for another blockchain. 
 
+Can we have a protection against Sybil attacks without spending computational resources? The simplest way to achieve this is to use cryptocurrency tokens as anti-Sybil tools. That is, a probability to generate a block is proportional to a stake a node holds. 
+
 
 
 \subsection{History}
+
+Previously we talked about a blockchain. But in all the global networks collisions are possible~(to prevent them we need to have a global lock or synchronous rounds and then some kind of leader election). So in a network a \text{blocktree} lives.
+
+[TODO: a blocktree picture]
+
+In most cases the fact of blocktree existence in omitted. A node is storing a blockchain. A blockchain has some score(e.g. a chain length, but this is a totally insecure scoring function, see~\cite{?} for details). If better chain is declared in network, a node is throwing away blocks until common block and then apply better suffix. In this case a node sees a blocktree only during switching from one branch of it to another. There are some proposals to explicitly use a blocktree. For example, in GHOST scoring function~\cite{} a chain with heaviest tree wins. 
 
 
 \subsection{Consensus Layer Generalization}
