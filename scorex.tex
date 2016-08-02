@@ -33,7 +33,7 @@
 
 This is the guide to the blockchain data structure and digital currencies built on top of it. Unlike previous guides we do not start with an example of Alice sending a signed note to Bob. Instead, we describe data structures and a process of building them in a decentralized environment. The guide is made for people understanding basic data structures like sets and append logs. No cryptography knowledge is needed.
 
-We will explain cryptography in very layman terms. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
+We assume a reader already has general knowledge of Bitcoin. We also assume a reader has a general knowledge in most known topics of Cryptography, such as public key cryptography and cryptographic hash functions. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
 
 In the first chapter we describe basic building blocks of a blockchain system. In the second chapter we describe how the blocks are implemented in the Scorex framework. We provide code snippets in Scala language. No prior knowledge of the Scala language is required.
 
@@ -155,15 +155,15 @@ Along with transactions, we can put some aggregated data about them. For example
 After the examples, let's summarize what we have in common in all the observable cryptocurrencies.
 
 \begin{enumerate}
-\item{A Proposition And A Proof}
+\item{\textbf{A Proposition And A Proof.}}
 In an every imaginable blockchain we have objects to be protected by secret owners. To achieve the property of being protected we introduce a proposition, and an object could be modified or destroyed only by presenting a proof satisfying a proposition. There are a lot of possible instantiations, e.g. Bitcoin scripts or digital signatures. 
-\item{Box Structure}
+\item{\textbf{Box Structure.}}
 There is a minimal element of a replicated state we are calling a \textit{box}. A box is protected by a proposition. It is possible to modify it or destroy it only by showing a proof satisfying a proposition. 
-\item{Minimal State}
+\item{\textbf{Minimal State.}}
 Minimal state is a most compact structure giving an ability to verify a transaction against it. Minimal state is about a set of boxes. 
-\item{Transaction And Transactional Language}
+\item{\textbf{Transaction And Transactional Language.}}
 Transaction is a smallest possible atomic state modifier. A transaction is to be verified against a state in a deterministic fashion~(so given a state and a transaction, two nodes will always give the same validation result whether \textit{true} or \textit{false}). If a transaction is valid against a state it could modify the state. Validation and application rules are individual~(Ethereum even brings quasi Turing completeness here).
-\item{Block}
+\item{\textbf{Block.}}
 All the blockchain systems are storing transactions in full blocks. Most of them also have some authenticating value for the set of block transactions included into block thus it is possible to use block headers instead of full blocks in many scenarios in order to reduce a load.
 \end{enumerate}
 
