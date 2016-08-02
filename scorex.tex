@@ -178,7 +178,7 @@ In the first place, we can achieve this only for nodes willing to achieve this b
 
 [validity, agreement, termination]
 
-Computer Science studies consensus protocols since early 1980s. A lot of interesting results were generated in this field. For example, it is impossible to achieve consensus using a deterministic procedure for a set of nodes if they are exchanging messages asynchronously and a single process could fail(Fischer-Lynch-Paterson theorem~\cite{}). 
+Computer Science studies consensus protocols since early 1980s. A lot of interesting results were generated in this field. For example, it is impossible to achieve consensus using a deterministic procedure for a set of nodes if they are exchanging messages asynchronously and a single process could fail(Fischer-Lynch-Paterson theorem~\cite{fischer1985impossibility}). 
 
 Consensus in open networks, so with unknown number of participants, is pretty new and very hard question. 
 
@@ -225,7 +225,7 @@ Previously we talked about a blockchain. But in all the global networks collisio
 
 [TODO: a blocktree picture]
 
-In most cases the fact of blocktree existence in omitted. A node is storing a blockchain. A blockchain has some score(e.g. a chain length, but this is a totally insecure scoring function, see~\cite{?} for details). If better chain is declared in network, a node is throwing away blocks until common block and then apply better suffix. In this case a node sees a blocktree only during switching from one branch of it to another. There are some proposals to explicitly use a blocktree. For example, in GHOST scoring function~\cite{} a chain with heaviest tree wins. 
+In most cases the fact of blocktree existence in omitted. A node is storing a blockchain. A blockchain has some score(e.g. a chain length, but this is a totally insecure scoring function, see~\cite{?} for details). If better chain is declared in network, a node is throwing away blocks until common block and then apply better suffix. In this case a node sees a blocktree only during switching from one branch of it to another. There are some proposals to explicitly use a blocktree. For example, in GHOST scoring function~\cite{sompolinsky2015secure} a chain with heaviest tree wins. 
 
 
 \subsection{Consensus Layer Generalization}
