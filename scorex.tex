@@ -114,6 +114,8 @@ Abstracting the Bitcoin-like model, a minimal state could be represented as a se
 
 How to open a box? We can protect a box with a script in Bitcoin language. Or we can put a public key into closed box and then it is possible to open it with a proof of private key knowledge, a signature~(we will consider details further). To describe these approaches as well as many others possible in a general way, we say a box is protected by a \textit{proposition} of some kind, and in order to open it, a \textit{proof} of the same kind must be provided. There are some tricky details we will discuss further.
 
+A box can has some additional to a value data inside. For example, it can contain a domain record or a certificate. Anyway, box contents matters for every full node until it is closed. 
+
 \subsection{Namecoin}
 
 Namecoin, in addition to token transfers, introduce \textit{name} $\rightarrow$ \textit{value} storage. In general, values could be arbitrary, but there are few  standard namespaces with predefined semantics, for domains and identities.
