@@ -1,5 +1,8 @@
 \documentclass[]{report}   % list options between brackets
 
+\usepackage{color}
+\usepackage{graphicx}
+
 
 %% The amssymb package provides various useful mathematical symbols
 \usepackage{amssymb}
@@ -14,6 +17,37 @@
 
 \newtheorem{proposition}{Proposition}
 
+
+\newtheorem{claim1}{Claim}
+%\newtheorem{lemma}{Lemma}
+\newtheorem{dfn}{Definition}
+\newtheorem{defn}{Definition}
+%\newtheorem{definition}{Definition}
+\newcommand{\ma}{\mathcal{A}}
+\newcommand{\mb}{\mathcal{B}}
+\newcommand{\he}{\hat{e}}
+\newcommand{\sr}{\stackrel}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\la}{\leftarrow}
+
+\newcommand{\ignore}[1]{} % may contain useful stuff (that needs more work)
+\newcommand{\full}[1]{} % use only for full version
+\newcommand{\notfull}[1]{#1}
+\newcommand{\rand}{\stackrel{R}{\leftarrow}}
+\newcommand{\haya}{blue}
+\newcommand{\amitabh}{purple}
+\newcommand{\questions}{blue}
+\newcommand{\defined}{\stackrel{\mbox{\tiny{def}}}{=}}
+\newcommand{\mc}{\mathcal}
+\newcommand{\ms}{\mathsf}
+\newcommand{\txs}{\textsf}
+\newcommand{\lea}{\leftarrow}
+\newcommand{\rea}{\rightarrow}
+\newcommand{\adv}{{\cal A} }
+\def\kg{{\sf{Gen}}}
+\def\enc{{\sf{Enc}}}
+\def\dec{{\sf{Dec}}}
+\newcommand{\btc}{\includegraphics[height=8pt]{assets/btc.jpg}}
 
 % type user-defined commands here
 
@@ -52,6 +86,116 @@ In the first chapter we describe basic building blocks of a blockchain system. I
 \section{Other Tutorials}
 
 ``How the Bitcoin protocol actually works'' tutorial by Michael Nielsen~\cite{nielsen} define problems led to the creation of Bitcoin and how the cryptocurrency solved them. The original Bitcoin whitepaper by Satoshi Nakamoto~\cite{Nakamoto2008} still provides very good description of basic concepts of Bitcoin. Details of Bitcoin technicalities could be found in the ``Mastering Bitcoin'' book~\cite{antonopoulos2014mastering}.
+
+
+\chapter{Overview of Bitcoin}
+
+Although the bitcoin protocol is quite complex, only a few basic concepts are necessary to understand the idea. These are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}. We describe them below. Firstly note that in bitcoin, funds are exchanged between {\em addresses} which are %SHA256 
+hashes of public keys\footnote{We use the terms `address' and `public key' interchangeably. The meaning will be clear from the context.} %Depending on the context, a symbol $A$ could refer to a public key or an address (the meaning will be clear from the usage). 
+
+
+ 
+\subsubsection{Transaction:} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds). %The funds available at the inputs are pooled together and are available for transfer to the outputs. 
+%The transaction specifies how much each output must get. 
+
+\paragraph{Example:} 
+Suppose Alice is the owner of address $A$ which received $x$ bitcoins in a previous transaction. She wants to send $y \leq x$ bitcoins to Bob's address $B$. %Note that $A$ might have received more bitcoins in other transactions, which could be combined together. For now we will focus only on how these $x$ bitcoins are spent. 
+Alice constructs a transaction with $A$ as the input and $B$ as one of the outputs.
+She also inserts $ref$, the reference to the previous transaction's output where $A$ received those $x$ bitcoins.
+%\footnote{$ref$ is essentially a 32 bit hash of that older transaction along with the index of the output. This is used to prevent double-spending as explained in Section~\ref{v0}.} 
+%The protocol requires that 
+The entire amount $x$ must be transferred from $A$. %To satisfy this, 
+Alice sends $y$ bitcoins to $B$, sets a transaction fee $t$ and sends the remaining amount $z = x-y-t$ to her {\em change address} $C$, which is the other output. % of the transaction. 
+The change address is simply any address owned by Alice (possibly $A$). %, which she can use as input in a further transaction. 
+The message 
+
+$$\mbox{``{($ref$: remove $\btc x$ from $A$), (put $\btc y$ in $B$), (put $\btc z$ in $C$)}''}$$ is signed under $A$. 
+%The above transaction assigns $\btc y$ from Alice's public key $A$ to Bob's public key $B$. 
+%For the transaction to be valid, it must hold that $x \geq y+z$. (In general there can be several outputs as long as the sum of outputs is less than or equal to the input.) The transaction additionally has a verification condition which must pass for the funds to unlocked by $B$. Without loss of generality, we assume that the verification condition is ``Any funds leaving $B$ must be signed under $B$.'' More complex conditions can be inserted here. 
+
+\paragraph{Notation:} We will use the following notation:
+\begin{itemize}
+	\item $X \stackrel{ref}{\rightarrow} x$ is the message ``($ref$: remove $\btc x$ from $X$)''. This is an input.
+\item
+$X \leftarrow x$ is the message ``put $\btc x$ in $X$''. This is an output.
+\item
+$\sigma_X(m)$ is signature on message $m$ under public key $X$. %That is, public key $X$ is used to verify the signature.
+\end{itemize}
+Alice's transaction is then $(m, \sigma_A(m))$, where $m  =  (A\stackrel{ref}{\rea} x, B \lea y, C \lea z)$. 
+
+%\subsection{The Bitcoin Protocol (V0)} 
+%\label{v0}
+%\paragraph{Bitcoin protocol:} Here we give the bitcoin protocol (with some simplifications). This is Version  0.
+ 
+ 
+\paragraph{Transactions:} The above scenario had a single input. In reality, 
+a bitcoin transaction can have multiple inputs with no particular link between any source-destination pair. The entire transaction is signed under every input public key. The only requirement is that the sum of the funds at the inputs is greater than or equal to the sum of funds at the outputs. Any difference is considered a transaction fee. More formally, define $m$ to be the message
+\[
+M \defined (A_1\sr{ref_1}{\ra}x_1, A_2\sr{ref_2}{\ra}x_2, \ldots, A_n\sr{ref_n}{\ra}x_n, B_1\la y_1,
+B_2\la y_2, \ldots, B_l\la y_l), 
+\] 
+where: $(A_1, x_1, ref_1), (A_2, x_2, ref_2),\ldots , (A_n, x_n, ref_n)$ are $n$ tuples each consisting of an address $A_i$, amount of funds $x_i$ and a reference to a previous transaction %'s (unspent) output 
+where $A_i$ received $x_i$ bitcoins, and $(B_1, y_1), (B_2, y_2),\ldots, (B_l, y_l)$ are $l$ pairs of addresses and amount of funds. 
+%\paragraph{Inputs and outputs:} In message $M$ above, define inputs and outputs as follows:
+%\[\mbox{Inputs }\defined A_i\sr{ref_i}{\ra} x_i~~~~~~~~(1\leq i \leq n)\] 
+%\[\mbox{Outputs }\defined B_i \la y_i~~~~~~~~(1\leq i \leq l)\]
+A valid transaction $tx$ is a tuple: 
+\begin{equation}\label{tx0}tx\defined (M, \sigma_{A_1}(M), \sigma_{A_2}(M), \ldots, \sigma_{A_n}(M))\end{equation} such that each signature $\sigma_{A_i}(M)$ verifies correctly and the following holds:
+\begin{enumerate}
+	\item $\sum_{i=1}^{l}y_i \leq \sum_{i=1}^{n}x_i$ 
+	\item Each $ref_i$ for $1\leq i\leq n$ was never used in any prior transaction.
+\end{enumerate}
+
+The ordering of the signatures in $tx$ is determined from the ordering of messages inside $M$ (which is fixed due to the signatures).
+\paragraph{Referencing outputs:} In future, when spending the funds from any of the outputs (say $B_i \la y_i$) of the above transaction, a reference $ref_{B_i\la y_i}$ to that output needs to be provided. %This reference is computed as follows. 
+Let $tx$ be the string of Eqn.~\ref{tx0}. Then \[ref_{B_i\la y_i}\defined (Hash(tx), i)\]
+
+%\paragraph{References are unique:} 
+Because $ref$ is constructed from the hash of a previous transaction, it is guaranteed that two different transactions are distinct unless the outputs, input and $ref$ are identical (a forbidden scenario). Due to this, it is also guaranteed (with high probability) that the $ref$s generated by using hashes of two different transactions are also different. In fact, this is how bitcoin prevents double spending (see below). A $ref$ can be used in a transaction at most once. Bitcoin clients maintain a list of unused $ref$s to do this check.
+
+\paragraph{Unspent outputs (and double-spends):} An unspent output is essentially an unused reference, one that has never been used in any transaction. The protocol design guarantees that references to two different outputs will be distinct (see above).
+Each client maintains a set called `unspent outputs'. Each output of every transaction is added to this set, and removed when is it used as a reference in another transaction. A transaction with a reference not in this list is considered a double spend and is not processed. %Currently, the size of the entire unspent output set is less than 100 MB which can be maintained in memory.\footnote{\url{https://en.bitcoin.it/wiki/Scalability#Storage}}
+
+
+\paragraph{Validating Transactions:}
+%\label{sec:verify}
+%Every transaction sent from the client eventually reaches every other client with a high probability. 
+A new transaction is valid if all the references are unused. %the inputs from which the funds are being sent refer to unspent outputs. 
+%Each client maintains a list of unspent outputs and rejects the transaction if the referenced output is not in this list. Another reason to reject a transaction would be if the sum of funds at input is less than that at outputs, or if some of the signatures do not verify. If all checks pass, 
+If so, the transaction is accepted as {\em valid} but {\em unconfirmed}, and is relayed on the network. The clients add each such transaction to a pool of unconfirmed transactions. Unconfirmed transactions can be double-spent. 
+
+\subsubsection{Confirming Transactions:}
+\label{sec:verify}
+A miner is a client who confirms new transactions by solving a hard puzzle and providing the solution as a `proof-of-work'  as follows: 
+\begin{enumerate}
+	\item A bunch of unconfirmed transactions along with one reward transaction %\footnote{The reward transaction has no inputs. It takes the fees and the block reward.} 
+	(known as the \emph{coinbase transaction}) are combined into a `block'.
+	\item Hash of the previous block $h_{pr}$ is added to the block. %(version, etc) %. , computed incremented from the last block and the SHA256 hash of the last block is added to the block.
+	\item A nonce is added to the block.
+	\item Hash%SHA256(SHA256
+	($b$) %)
+	 of the final block $b$ is computed. 	
+\end{enumerate}
+
+If the output of the hash contains at least a specified number of leading zeros, the puzzle is solved, otherwise the miner tries with different nonces until the puzzle is solved or some other miner broadcasts the solution of a puzzle for a block referencing $h_{pr}$. A correct solution implies that the corresponding block is `mined' and all transactions contained in it are confirmed.
+%Assuming that $M$ solves the puzzle first, block $b$ is considered `mined' and is broadcast to the network for other clients to append it to their blockchains. After this the transaction is confirmed. 
+
+\paragraph{Confirmations:} The number of confirmations of a transaction are the number of blocks in the blockchain that have been accepted by the network since the block that includes the transaction. The possibility of double-spending a transaction decreases exponentially with the number of confirmations. The default client requires 6 confirmations for normal transactions and 100 confirmations for reward transactions before they can be spent.  
+
+\paragraph{Transaction pool management:} Each client maintains a pool of unverified (but valid) transactions. An element is removed from this pool when that transaction gets included in a mined block. This ensures that even if a transaction is not included in an immediate block, it is kept in the pool until it gets mined. %This guarantees that once a transaction has been included in the pool of at least one miner, it will eventually be verified. %\footnote{The word `pool' as used here should not be confused with `mining pool'. They are unrelated terms.}
+
+\subsubsection{Anonymity:} 
+The addresses serve as pseudonyms and provide some anonymity. However, bitcoin does not provide true anonymity because the inputs are linked to the previous outputs via a reference.
+
+\subsubsection{Security:}
+
+For security, we require the following requirements: (1) The inability of an attacker to send bitcoins from addresses whose private key is not known, and (2) The inability of an attacker to double-spend bitcoins or reverse a transaction. The first requirement is satisfied if the underlying signature scheme is existentially unforgeable. The second requirement is satisfied using something called {\em proof-of-work} as discussed above. In addition to that, we have the following Bitcoin specific attacks:
+\begin{enumerate}
+	\item {\em Reused R-values:}
+	\item {\em Attack on cumulative difficulty:} Since the initial difficulty is small in the first two years of Bitcoin, a powerful attacker may be able to forge a chain longer than the current one with higher cumulative difficulty. This attack becomes more difficult as the cumulative difficulty increases.
+	\item {\em Centralization of mining:} 
+	\item {\em Denial of service attacks:} (large blocks)
+\end{enumerate}
 
 
 \chapter{A Blockchain System Design}             % chapter 2
