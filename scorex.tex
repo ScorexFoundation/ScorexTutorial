@@ -2,8 +2,6 @@
 
 \usepackage{color}
 \usepackage{graphicx}
-
-
 %% The amssymb package provides various useful mathematical symbols
 \usepackage{amssymb}
 %% The amsthm package provides extended theorem environments
@@ -18,6 +16,32 @@
 \newtheorem{proposition}{Proposition}
 
 
+% type user-defined commands here
+\usepackage[T1]{fontenc}
+
+\usepackage{xcolor}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstdefinestyle{myScalastyle}{
+  frame=tb,
+  language=scala,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
 \newtheorem{claim1}{Claim}
 %\newtheorem{lemma}{Lemma}
 \newtheorem{dfn}{Definition}
@@ -49,11 +73,11 @@
 \def\dec{{\sf{Dec}}}
 \newcommand{\btc}{\includegraphics[height=8pt]{assets/btc.jpg}}
 
-% type user-defined commands here
-
 \begin{document}
 
-\lstset{language=Scala}
+%\lstset{language=Scala}
+%\begin{lstlisting}[style=myScalastyle]
+%
 
 \title{Scorex Tutorial}
 \author{Alexander Chepurnoy}         
@@ -62,8 +86,7 @@
 
 % \begin{abstract}  
 % \end{abstract}
-
-\chapter{Introduction}
+\chapter{Executive Summary}
 
 This paper describes the Scorex project and how it can be used to create blockchain protocols such as cryptocurrencies (Bitcoin). Scorex is a library written in Scala with loosely coupled components that can be used as the underlying framework for making applications using a blockchain (a type of decentralized consensus-based protocol). 
 The intended audience is developers wanting to create or experiment with such applications. Some basic knowledge of cryptography, data structures and cryptocurrencies is required. Some programming background is also required to understand the code-snippets. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
@@ -75,18 +98,61 @@ In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and N
 	\item Mechanism for defining arbitrary rules as to when a token transfer is valid (Bitcoin UTXOs, NXT accounts, Namecoin domains).
 \end{enumerate}
 
-This is also the guide to the blockchain data structure and digital currencies built on top of it. Unlike previous guides we do not start with an example of Alice sending a signed note to Bob. Instead, we describe data structures and a process of building them in a decentralized environment. The guide is made for people understanding basic data structures like sets and append logs. No cryptography knowledge is needed.
+\section{Why Scala}
 
-We assume a reader already has general knowledge of Bitcoin. We also assume a reader has a general knowledge in most known topics of Cryptography, such as public key cryptography and cryptographic hash functions. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
+There are several reasons for choosing Scala:
+\begin{enumerate}
+	\item Scala runs on the JVM which allows it to be cross-platform.
+	\item Scala inter-operates seamlessly with Java.
+	\item Scala is fully functional and consequently allows compact and more readible code.
+	\item Scala has powerful constructs for concurrency.
+	
+\end{enumerate}
 
-In the first chapter we describe basic building blocks of a blockchain system. In the second chapter we describe how the blocks are implemented in the Scorex framework. We provide code snippets in Scala language. No prior knowledge of the Scala language is required.
+\section{Organization}
 
-\section{Background}
 
-\section{Other Tutorials}
+This document is organized as follows. In Chapter~\ref{building-blocks}, we describe basic building blocks of a blockchain system. In Chapter~\ref{impl}, we describe how the blocks are implemented in the Scorex framework. We provide code snippets in Scala language. No prior knowledge of the Scala language is required.
 
-``How the Bitcoin protocol actually works'' tutorial by Michael Nielsen~\cite{nielsen} define problems led to the creation of Bitcoin and how the cryptocurrency solved them. The original Bitcoin whitepaper by Satoshi Nakamoto~\cite{Nakamoto2008} still provides very good description of basic concepts of Bitcoin. Details of Bitcoin technicalities could be found in the ``Mastering Bitcoin'' book~\cite{antonopoulos2014mastering}.
 
+\chapter{Introduction}
+
+If you have heard of blockchain then you have indirectly heard of Bitcoin, the decentralized peer-to-peer currency network with some fancy features such as the ability to transfer real value over virtual channels. This is because Bitcoin is the first widespread use of the blockchain, which is essentially a {\em decentralized tamper-resistant append-only database} of transactions (sometimes also referred to as a {\em ledger}). Let us elaborate on this in more detail in the following sections. 
+
+\section{Blockchain as a Finite-State Machine}
+Formally, a blockchain represents a finite-state machine with state changes encoded in blocks and a copy of a blockchain representing a snapshot of this state machine. There are certain rules that must be followed to encode a valid state change. These are encoded in transactions. Additionally, older snapshots are considered tamper-resistant while fresh copies may be susceptible to deletion or tampering, depending on the computational power of the attacker. However, after the snapshot becomes sufficiently old, it can be considered as tamper-proof for all practical purposes. The rules of the transactions ensure that if all honest nodes start with the same initial state and apply the same transactions then they will have the same snapshots at any time. The task here is to ensure that the transactions are always applied in the right order. This is a consensus problem, and is solved in Bitcoin using a concept called proof-of-work -- the solution to a hard puzzle. The idea is that not everyone gets to choose which set of transactions to apply to reach the next valid snapshot, but only by someone who has invested a large amount of computing power and provides the proof on a first-come-first-serve basis. Snapshots are connected -- each block is linked to the previous one via a cryptographic hash so that if someone else provides a proof-of-work and the network accepts it, then all existing work for ``winning'' this block is invalidated and the contenders have to start again with the newly accepted block as the starting point. To incentivize nodes to expend work, each accepted snapshot comes with some reward in the form of tokens generated (additional states that benefit the node solving the puzzle). 
+
+The rules encoding state changes are hardwired into the peer-to-peer nodes so that once a majority of them are running the code and act honestly, we can be ensured that block updates follow the correct rules. Blockchain can tolerate a high number of corrupt nodes (those controlled by an attacker) -- close to 40\%. 
+
+Transactions can also be seen as state changes authorized via private keys and validated by the corresponding public keys. The transaction can encode information pertaining to funds transfer (as in Bitcoin) or have additional information pertaining to the external world such as attaching a key-value pairs to a public key (as in Namecoin -- a decentralized DNS).
+While Bitcoin seems to be the primary use of blockchain right now, other intriguing use cases such as Namecoin have also been presented. The most powerful of being programmable-blockchains. The idea is simple -- while in Bitcoin, the rules encoding the state changes pertain only to spending of funds, nothing prevents us from coming up with more complex rule that can encode some business logic. One such example, already mentioned, is Namecoin, which additionally has rules for reserving doman names and for transferring them. In all cases, the rules will be written in a language that the node understands and accepts (the grammar is hardwired into the node). 
+
+The newer applications of blockchain are all based on how these rules can be written and how expressive the language is. For instance, Etherium, another blockchain based protocol boasts of a Turing complete language in contrast to the tiny one that Bitcoin provides. The following summarizes the main proposals.
+
+%
+\begin{enumerate}
+	\item {\em Bitcoin:} Decentralized currency. 
+	
+		{\em Advantages:} Decentralization of money, easy to store and spend.
+		
+		{\em Challenges:} Too much storage, wild price fluctuations, too much energy consumed, limited bandwidth of blocks, not suitable for micro-transactions.
+	\item {\em Namecoin:} Decentralized DNS (stores {\em key} $\rightarrow$ {\em value} mappings). 
+
+		{\em Advantages:} Decentralization of DNS, difficult to sensor or shut down.
+		
+		{\em Challenges:} Similar in design to Bitcoin; some similar challenges, low computing power so less attack resistant.
+	
+	\item {Etherium:} Smart	contracts.
+	
+	  {\em Advantages:} Enable trustless computing via decentralization.		
+		
+		{\em Challenges:} Turing completeness causes complexity, may have security issues -- example DAO attack.
+	
+\end{enumerate}
+%\section{Other Tutorials}
+%
+%``How the Bitcoin protocol actually works'' tutorial by Michael Nielsen~\cite{nielsen} define problems led to the creation of Bitcoin and how the cryptocurrency solved them. The original Bitcoin whitepaper by Satoshi Nakamoto~\cite{Nakamoto2008} still provides very good description of basic concepts of Bitcoin. Details of Bitcoin technicalities could be found in the ``Mastering Bitcoin'' book~\cite{antonopoulos2014mastering}.
+%
 
 \chapter{Overview of Bitcoin}
 
@@ -197,15 +263,24 @@ For security, we require the following requirements: (1) The inability of an att
 	\item {\em Denial of service attacks:} (large blocks)
 \end{enumerate}
 
-
+%TBD
 \chapter{A Blockchain System Design}             % chapter 2
 \section{Introduction}     
 
-Blockchain is a prefix-immutable append log of non-conflicting authenticated events happen in a decentralized peer-to-peer network. Simple, eh? \textit{But what all this actually means?}
+
+Consider Bitcoin as an example. Peers are holding money in form of algorithmically issued tokens. They do not trust each other, and do not to seek for a trusted mediator. Instead, they are running a Bitcoin protocol which builds a blockchain, a type of {\em append-only database} (or log). Older data in the blockchain can be considered {\em tamper-resistant} because it is protected using a consensus build using {\em proof-of-work} (a solution to a exponentially hard puzzle that can be verified efficiently, once known). The design of the protocol is such that the puzzle becomes harder as the data gets older. However, freshly added data (i.e., the last few versions of the log) are considered potentially unstable. Double spends are prevented using this database because the entire transfer history of any satoshi can be traced back to the time it was created. Thus, for example, if Alice had sent all her satoshis to Bob, she can't send anything after that and before receiving them from other party.
+
+Using the above idea, we can define a blockchain as a {\em prefix-immutable append log of non-conflicting authenticated events in a decentralized peer-to-peer network}. Let us now elaborate on what this means.
 
 Simply said, there are peers do not trust each other. There is no any trusted party, only a protocol peers need to follow~(being effectively thrown away from the network otherwise). Peers are issuing authenticated~(signed) events of some semantics. For example, they are sending out signed payments. Or they are registering \(name \rightarrow value\) correspondences in a shared database~(certificates, domains). ``Prefix-immutable append log'' means all the peers following the protocol are agree on immutable prefix of events append log. That is, if we cut a suffix of some length from the log a peer holds, for each peer, same-size prefixes will be the same, with overwhelming probability. Events in the ordered prefix-immutable log must be non-conflicting in order to have flawless history.
 
 Consider Bitcoin as an example. Peers are holding money in form of algorithmically issued tokens. They do not trust each other, and do not to seek for a trusted mediator. Instead, they are running a Bitcoin protocol which builds prefix-immutable append log containing token transfers. Last few versions of the log are considered potentially unstable, but before them the history is considered as irreversible. The payments history is flawless, so, for example, if Alice had sent all her tokens to Bob, she can't send anything after that and before receiving tokens from other party.
+
+\subsection{Security of Bitcoin}
+
+Like any multiparty protocol, Bitcoin needs {\em correctness} (`valid transactions' should go through) and {\em soundness} (`invalid transactions' must be blocked). Correctness is defined in terms of passive adversaries, who behave according to protocol and do not attempt deviate. 
+
+%Correctness is trivially guaranteed because if all parties behave correctly, then the protocol indeed behaves as expected [...]. For soundness
 
 \section{Cryptography}
 
@@ -283,7 +358,7 @@ This design has a critical flow. A block generator could refuse to include \text
 
 \subsection{Nxt and Ethereum}	
 
-Considering Bitcoin, you can be goggled by complexity of boxes and propositions in form of stack-based scripts. Why not to have just accounts and token transfers between them instead? 
+Having a Bitcoin wallet, you can be goggled by complexity of boxes and propositions in form of stack-based scripts. Why not to have just accounts and token transfers between them instead? 
 
 Actually some of Bitcoin successors walked this path. For example, Nxt has a dedicated notion of accounts. An account is associated with its public key. A transaction transfers tokens from one account to another and needed to be signed by the sender. For such a system stateful verification needs for a minimal state in form of table holding a correspondence between accounts and their balances.
 
@@ -291,7 +366,7 @@ With such a simple minimal state design we have a problem though. Let's describe
 
 Ethereum solves the problem by modifying minimal state representation adding ``nonce'' value to it. That is, minimal state is not about (public key $\rightarrow$ balance) correspondence anymore, but (public key $\rightarrow$ (nonce, balance)). Transaction contains nonce value \(txnonce\) as well, and transaction is valid and so applicable only if \(txnonce = nonce + 1\). By application, \(nonce := txnonce\). 
 
-So, unlike Bitcoin, Ethereum sets strict order of transactions issued by an account. In Bitcoin, transactions could be applied in any order, 
+Unlike Bitcoin, Ethereum sets strict order of transactions issued by an account. In Bitcoin, transactions could be applied in any order, 
 if they are spending non-overlapping sets of outputs, and input of one transaction does not spend an output of another. In Ethereum, order of transaction is set by nonce values. 
 
 
@@ -419,15 +494,6 @@ Scorex is a modular blockchain core framework. It supports definitions given in 
 We will describe some concepts of Scala language in sections started with ``*''. If you already a Scala developer, you can miss the sections. Experience with programming languages(say, Java, C++, OCaml or Rust) is needed, as we will explain Scala features used in code snippets provided very quickly. For a good introduction into the Scala language, please refer to~\cite{odersky2008programming}.
 
 Scala is functional, modular and also object-oriented language. Such a mix of concepts means different developers can follow very different styles. 
-
-There are several reasons for choosing Scala:
-\begin{enumerate}
-	\item Scala runs on the JVM which allows it to be cross-platform.
-	\item Scala inter-operates seamlessly with Java.
-	\item Scala is fully functional and consequently allows compact and more readible code.
-	\item Scala has powerful constructs for concurrency.
-	
-\end{enumerate}
 
 [TODO: quick description]
 
@@ -594,6 +660,6 @@ The module contains an implementation of Permacoin consensus protocol~\cite{mill
 \section{Conclusion}
 
 \bibliographystyle{plain}
-\bibliography{sources.bib}
+\bibliography{sources}
 
 \end{document}	
