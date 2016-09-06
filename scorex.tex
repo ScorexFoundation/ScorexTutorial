@@ -85,7 +85,8 @@
 \maketitle
 
 % \begin{abstract}  
-% \end{abstract}
+
+
 \chapter{Executive Summary}
 
 This paper describes the Scorex project and how it can be used to create blockchain protocols such as cryptocurrencies (Bitcoin). Scorex is a library written in Scala with loosely coupled components that can be used as the underlying framework for making applications using a blockchain (a type of decentralized consensus-based protocol). 
@@ -151,7 +152,7 @@ hashes of public keys\footnote{We use the terms `address' and `public key' inter
 
 
  
-\subsubsection{Transaction:} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds). %The funds available at the inputs are pooled together and are available for transfer to the outputs. 
+\section{Transaction} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds). %The funds available at the inputs are pooled together and are available for transfer to the outputs. 
 %The transaction specifies how much each output must get. 
 
 \paragraph{Example:} 
@@ -213,16 +214,61 @@ Because $ref$ is constructed from the hash of a previous transaction, it is guar
 Each client maintains a set called `unspent outputs'. Each output of every transaction is added to this set, and removed when is it used as a reference in another transaction. A transaction with a reference not in this list is considered a double spend and is not processed. %Currently, the size of the entire unspent output set is less than 100 MB which can be maintained in memory.\footnote{\url{https://en.bitcoin.it/wiki/Scalability#Storage}}
 
 
-\paragraph{Validating Transactions:}
-%\label{sec:verify}
-%Every transaction sent from the client eventually reaches every other client with a high probability. 
-A new transaction is valid if all the references are unused. %the inputs from which the funds are being sent refer to unspent outputs. 
-%Each client maintains a list of unspent outputs and rejects the transaction if the referenced output is not in this list. Another reason to reject a transaction would be if the sum of funds at input is less than that at outputs, or if some of the signatures do not verify. If all checks pass, 
-If so, the transaction is accepted as {\em valid} but {\em unconfirmed}, and is relayed on the network. The clients add each such transaction to a pool of unconfirmed transactions. Unconfirmed transactions can be double-spent. 
+\section{Processing Transactions}
 
-\subsubsection{Confirming Transactions:}
+
+A new transaction is valid if all the references are unused. If so, the transaction is accepted as {\em valid} but {\em unconfirmed}, and is relayed on the network. The clients add each such transaction to a pool of unconfirmed transactions. Unconfirmed transactions can be double-spent. Here we describe the validation process in more detail.
+Recall that a transaction is equivalent to 
+$$tx\defined (M, \sigma_{A_1}(M), \sigma_{A_2}(M), \ldots, \sigma_{A_n}(M)),$$ 
+where $M$ is a message with the following semantics:
+\[
+M \defined (A_1\sr{ref_1}{\ra}x_1, A_2\sr{ref_2}{\ra}x_2, \ldots, A_n\sr{ref_n}{\ra}x_n, B_1\la y_1,
+B_2\la y_2, \ldots, B_l\la y_l), 
+\] 
+each $\sigma_{A_i}(M)$ is a valid signature on $M$ under $A_i$ and the following holds:
+
+\begin{enumerate}
+	\item $\sum_{i=1}^{l}y_i \leq \sum_{i=1}^{n}x_i$.
+	\item Each $ref_i$ for $1\leq i\leq n$ was never used in any prior transaction.
+	%\item Each $\sigma_{A_i}(M)$ is a valid signature on $M$ under $A_i$.
+\end{enumerate}
+
+In reality, the inputs $A_1\sr{ref_1}{\ra}x_1$ are represented only using $ref_i$. The values $A_i$ and $x_i$ are obtained from a {\em UTXO database} that every client must maintain.\footnote{The inputs additionally include the public key corresponding to address $A_i$. We can assume that this key is part of the signature.} This database is a key-value store of type $ref_i \ra (A_i, x_i)$. Note that in order to validate transactions and participate in the protocol, maintaining this UTXO database is necessary. Once a node has bootstrapped and synced, it need not store the entire blockchain. It can store just the UTXO database (plus a few recent blocks to handle rollbacks), and keep updating this database as new blocks are mined. Thus, even if a node is not storing blocks, it must still parse every new block to update its UTXO database. Also note that a node that does not store the blockchain cannot help other new nodes to bootstrap.
+
+
+It is helpful to consider each (unused) $ref_i$
+%$A_1\sr{ref_1}{\ra}x_1$ 
+above as a ``closed box'' with $x_i$ inside, and the act of using $ref_i$ in a transaction as ``opening the box'' and releasing $x_i$. A box can be opened at most once and the act of sending bitcoins to an address ($B_i\la y_i$) generates a new closed box with $y_i$ inside. 
+
+The semantics of transactions are specified using some encoding and a DSL called {\em Script} (a stack-based language similar in design to Forth). 
+A node validates transactions as follows.
+%As a basic requirement, Script has the following instructions:
+
+% verifying signature
+% input script defines the steps to do (i.e., verify signature)
+% output script defines how to create the new box
+
+\begin{enumerate}
+  \item	For each input $A_i\sr{ref_i}{\ra}x_i$ from $(A_1\sr{ref_1}{\ra}x_1, A_2\sr{ref_2}{\ra}x_2, \ldots, A_n\sr{ref_n}{\ra}x_n)$
+	
+	\begin{enumerate}
+		\item Load signature $\sigma_i$ and public key $A_i$ into stack. 
+		\item Using $ref_i$, find box $A_{i}\la x_i$ from the database of unopened boxes. This is the output of a transaction where $A_i$ received $x_i$ bitcoins. 
+		\item The loaded box contains the amount to be released as well as ``unlocking instructions'', a sequence of Script operations that verify the above signature on $M$. This is also loaded on the stack and evaluated. The box is opened if the output of the program is True (non-zero).
+	\end{enumerate}
+	\item If all boxes are opened, then we create new boxes $B_i\la y_i$ as defined by the outputs, provided that the total amount released from boxes is more than or equal to the total amount in the newly created boxes. 
+\end{enumerate}
+
+The opened and created boxes are not immediately committed to the UTXO database. Rather, every node must wait for the network to ``confirm'' the changes implied by any given transaction.  
+Transactions are confirmed in bulk such that all nodes quickly reach a consensus on which set of transactions to include in the next database update. 
+To ensure consistency and fast consensus, not everyone gets to choose which transactions to commit but only those nodes who have a large amount of computing resources (called ``miners'').
+
+ 
+\section{Confirming Transactions}
 \label{sec:verify}
-A miner is a client who confirms new transactions by solving a hard puzzle and providing the solution as a `proof-of-work'  as follows: 
+Miners are nodes that propose a set of transactions to commit along with a proof that they have put in a certain minimum amount of work (in the form of CPU cycles) after the last update. The network selects the first solution. 
+
+A miner confirms new transactions as follows: 
 \begin{enumerate}
 	\item A bunch of unconfirmed transactions along with one reward transaction %\footnote{The reward transaction has no inputs. It takes the fees and the block reward.} 
 	(known as the \emph{coinbase transaction}) are combined into a `block'.
@@ -238,22 +284,59 @@ If the output of the hash contains at least a specified number of leading zeros,
 
 \paragraph{Confirmations:} The number of confirmations of a transaction are the number of blocks in the blockchain that have been accepted by the network since the block that includes the transaction. The possibility of double-spending a transaction decreases exponentially with the number of confirmations. The default client requires 6 confirmations for normal transactions and 100 confirmations for reward transactions before they can be spent.  
 
-\paragraph{Transaction pool management:} Each client maintains a pool of unverified (but valid) transactions. An element is removed from this pool when that transaction gets included in a mined block. This ensures that even if a transaction is not included in an immediate block, it is kept in the pool until it gets mined. %This guarantees that once a transaction has been included in the pool of at least one miner, it will eventually be verified. %\footnote{The word `pool' as used here should not be confused with `mining pool'. They are unrelated terms.}
+\paragraph{Transaction pool management:} Each client maintains a pool of unverified (but valid) transactions. An element is removed from this pool when that transaction gets included in a mined block. This ensures that even if a transaction is not included in an immediate block, it is kept in the pool until it gets mined. If a transaction is not confirmed within 72 hours then it forgotten. 
 
-\subsubsection{Anonymity:} 
-The addresses serve as pseudonyms and provide some anonymity. However, bitcoin does not provide true anonymity because the inputs are linked to the previous outputs via a reference.
+\section{Security and Privacy} 
 
-\subsubsection{Security:}
 
-For security, we require the following requirements: (1) The inability of an attacker to send bitcoins from addresses whose private key is not known, and (2) The inability of an attacker to double-spend bitcoins or reverse a transaction. The first requirement is satisfied if the underlying signature scheme is existentially unforgeable. The second requirement is satisfied using something called {\em proof-of-work} as discussed above. In addition to that, we have the following Bitcoin specific attacks:
+For security, we require the following: (1) The inability of an attacker to send bitcoins from addresses whose private key is not known, (2) The inability of an attacker to double-spend bitcoins or reverse a transaction, and (3) The inability of an attacker to exclude certain valid transactions from confirming. The first requirement is satisfied if the underlying signature scheme is existentially unforgeable. The second and third requirements, formalized respectively as {\em persistence} and {\em liveness} in~\cite{Garay2015}, can be achieved if the underlying proof-of-work (PoW) based consensus system satisfies the following two properties~\cite{Garay2015}:
 \begin{enumerate}
-	\item {\em Reused R-values:}
-	\item {\em Attack on cumulative difficulty:} Since the initial difficulty is small in the first two years of Bitcoin, a powerful attacker may be able to forge a chain longer than the current one with higher cumulative difficulty. This attack becomes more difficult as the cumulative difficulty increases.
-	\item {\em Centralization of mining:} 
-	\item {\em Denial of service attacks:} (large blocks)
+	\item {\em Common prefix:} If all honest participants remove the top (newer) $k$ blocks from their chains for a large enough $k$ then all of them will share a common prefix. In other words, the chains held by honest miners will either be identical or be contained in the others.
+	\item {\em Chain quality:} There is some minimal integer $\lambda\geq 1$ such that, if the combined computing power of honest parties is $\lambda$ times that of the adversary, then a non-negligible amount of blocks generated by honest parties will make it into the chain. 
 \end{enumerate}
 
-%TBD
+If the difficult level is sufficiently high and the network synchronization time (time between a new block being injected and reaching all participants) is short compared to average block generation period (10 minutes in Bitcoin) then the protocol offers high security. On the other hand, security is weakened if any of the following conditions hold:
+(1) overall computing power is low, (2) blocks are generated too fast, or (3) network takes long time to synchronize. 
+
+
+We additionally have some Bitcoin specific attacks:
+\begin{enumerate}
+	\item {\em Reused R-values:} The underlying signatures ECDSA can be broken if the same randomness is used in two different signatures~\cite{reusedRvalues}. Thus, implementations must take additional care to use true randomness or message-specific one (computed as a hash of the message).
+	%\item {\em Attack on cumulative difficulty:} Since the initial difficulty is small in the first two years of Bitcoin, a powerful attacker may be able to forge a chain longer than the current one  with higher cumulative difficulty. This attack becomes more difficult as the cumulative difficulty increases.
+	\item {\em Centralization of mining:} If a majority of the mining power is concentrated in a few pools, then they can collude and attack bitcoin. Part of the reason for this threat is the susceptibility to ASIC mining~\cite{asic}.
+	\item {\em Denial of service attacks:} Certain attacks are based on miners forcing other miners to skip block validation by generating large blocks or ones that require expensive verification. Thus, they could send wrong data that will result in other miners to later lose their work.
+	\item {\em Malleability:} The signature encoding in Bitcoin is such that if a certain bits of the signature are toggled, the result is still a valid signature (this is due to the underlying ECDSA scheme). This allows miners to mine a transaction whose is different from the original, while keeping everything else (i.e., inputs/outputs) same. If a bitcoin service uses the transaction hash to monitor sent funds, then it could lose funds~\cite{gox}.
+\end{enumerate}
+
+\textbf{Privacy:} The addresses serve as pseudonyms and provide some anonymity. However, bitcoin does not provide true anonymity because the inputs are linked to the previous outputs via a reference.
+
+
+\section{Scalability}
+
+Before discussing scalability, we describe block construction in more detail. A block consists of a variable-size {\em payload} containing the actual transactions in a Merkle tree structure and a fixed-size {\em header} describing the payload. The header contains: 
+\begin{enumerate}
+	\item The root hash of the Merkle tree of transactions.
+	\item The current block index and the previous block-header hash.
+	\item The nonce and the corresponding difficulty level.	
+	\item A timestamp.
+\end{enumerate}
+
+Earlier we stated (for simplicity) that the PoW is computed as a hash of the entire block. However, this is not true. The PoW is computed only on the header and not the payload. This enables nodes to verify PoW using just header information, while the payload can be verified later via the root hash. 
+
+\textbf{Why do we need to store?} As discussed earlier, at the minimum each node must store the unopened boxes in a UTXO database. Additionally, each node may store the entire blockchain starting from the genesis block to help other clients to bootstrap. 
+
+[...]
+
+\textbf{What can be pruned?} If all the closed boxes generated in a particular block have been opened, that block is not needed for validation (we need blocks to validate/proof that our UTXO database is valid). Thus we can only store the headers for those blocks.\footnote{However, in the existing protocol, we cannot prove to another node that all generated boxes in a pruned block have been used up. A proposal of {\em block-level aggregation} of transactions could allow that.}
+
+
+[...]
+
+% dicuss about block size, bandwidth requirements
+% discuss minimal state, why we need to store utxo
+% why we need history
+
+
 \chapter{A Blockchain System Design}             % chapter 2
 \section{Introduction}     
 
@@ -270,6 +353,7 @@ Consider Bitcoin as an example. Peers are holding money in form of algorithmical
 
 Like any multiparty protocol, Bitcoin needs {\em correctness} (`valid transactions' should go through) and {\em soundness} (`invalid transactions' must be blocked). Correctness is defined in terms of passive adversaries, who behave according to protocol and do not attempt deviate. 
 
+%We will discuss how correctness 
 %Correctness is trivially guaranteed because if all parties behave correctly, then the protocol indeed behaves as expected [...]. For soundness
 
 \section{Cryptography}
