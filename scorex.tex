@@ -92,7 +92,11 @@
 This paper describes the Scorex project and how it can be used to create blockchain protocols such as cryptocurrencies (Bitcoin). Scorex is a library written in Scala with loosely coupled components that can be used as the underlying framework for making applications using a blockchain (a type of decentralized consensus-based protocol). 
 The intended audience is developers wanting to create or experiment with such applications. Some basic knowledge of cryptography, data structures and cryptocurrencies is required. Some programming background is also required to understand the code-snippets. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
 
-In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Nxt as three distinct applications of blockchain. Scorex gives the underlying framework for developing any of the three apps (and several others) by writing a thin layer of code. The main components of Scorex are:
+In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Nxt as three distinct applications of blockchain. Scorex gives the underlying framework for developing any of the three apps (and several others) by writing a thin layer of code. 
+
+
+[TODO: AC: we have more complex division now, fix the list below?]
+The main components of Scorex are:
 \begin{enumerate}
 	\item Mechanism for creating a genesis block and subsequent blocks using some transferable tokens (transactions).
 	\item Mechanism for forming consensus as to when a block is accepted in the blockchain (proof-of-work, proof-of-stake, etc).
