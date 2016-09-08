@@ -552,6 +552,8 @@ Blockchain is maintained in a peer-to-peer network. For simplicity we are starti
 [TODO: fully prunable outputs]
 [TODO: ZCash]
 
+
+
 \subsection{Rollerchain}
 
 \subsection{GHOST}
@@ -679,33 +681,14 @@ So a minimal state knows its current version, can apply a block, and also rollba
 \subsection{Memory Pool}
 
 \begin{lstlisting}
-trait UnconfirmedTransactionsDatabase[TX <: Transaction[_, TX], TData <: TransactionalData[TX]] {
-  def putIfNew(tx: TX): Boolean
 
-  def all(): Seq[TX]
 
-  def getById(id: Array[Byte]): Option[TX]
-
-  def packUnconfirmed(): TData
-
-  def clearFromUnconfirmed(data: TData): Unit
-
-  def onNewOffchainTransaction(transaction: TX): Unit
-
-  def remove(tx: TX)
-  
-}
 \end{lstlisting}
 
 \subsection{Transactional Block Data}
 
 \begin{lstlisting}
-trait TransactionalData[TX <: Transaction[_, TX]] extends BytesSerializable with JsonSerializable {
-  val mbTransactions: Option[Traversable[TX]]
 
-  val headerOnly = mbTransactions.isDefined
-  ....
-}
 \end{lstlisting}
 
 \subsection{Transactional Module}
@@ -717,11 +700,7 @@ trait TransactionalData[TX <: Transaction[_, TX]] extends BytesSerializable with
 \subsection{Block}
 
 \begin{lstlisting}
-class Block[P <: Proposition, TData <: TransactionalData[_ <: Transaction[P, _]], CData <: ConsensusData](
-                                                                                      val version: Byte,
-                                                                                      val timestamp: Long,
-                                                                                      val consensusData: CData,
-                                                                                      val transactionalData: TData)
+
 \end{lstlisting}
 
 \subsection{History and Blockchain}
