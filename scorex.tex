@@ -541,6 +541,18 @@ In most cases the fact of blocktree existence in omitted. A node is storing a bl
 
 Full node is a node which holds at least some state enough to check whether an arbitrary transaction is valid against it and so applicable to it or not. We have defined such a state, \textit{minimal state}, above. Nodes are also storing a history from which the minimal state has been rendered. In addition to the state modifiers log and the minimal state, a fullnode also contains two more entities. \textit{Memory pool} contains transactions not yet included into blocks~(and there is no guarantee of inclusion for them). \textit{Vault} contains some node-specific information a node is extracting from the log. For example, it could contain values encoded in some or all OP\_RETURN instructions, or all the transactions for specific addresses. The well-known example of vault is \textit{wallet} which contains private keys as well as transaction associated with their public images.
 
+With the four entities being defined we can explicitly state a node view type now: \(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \).
+
+The quadruple could be modified by applying whether an offchain transaction or a block coming from a local side(user issuing a transaction to a local node, mining software generating a block) or from remote peer. We can state some rules of the node view  modification even for the most abstract definition given:
+
+\begin{itemize}
+\item an offchain transaction modifies vault and memory pool. Atomicity in this update is not critical.
+
+\item for a persistent node view modifier atomicity for an update is strictly needed! If history is producing rollback sude-effect, other parts must handle it properly before applying an update. This sounds trivial, but in fact many implementation are spending years fighting with bugs related to inconsistency and read-when-update issues.
+\end{itemize}
+
+
+[TODO: pseudocode? or Scala code in Scorex counter-part?]
 
 
 \section{Peer-to-Peer Network}	
