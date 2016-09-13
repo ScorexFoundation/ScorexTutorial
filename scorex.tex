@@ -537,6 +537,12 @@ In most cases the fact of blocktree existence in omitted. A node is storing a bl
 
 \subsection{Consensus Layer Generalization}
 
+\subsection{Full Node View}
+
+Full node is a node which holds at least some state enough to check whether an arbitrary transaction is valid against it and so applicable to it or not. We have defined such a state, \textit{minimal state}, above. Nodes are also storing a history from which the minimal state has been rendered. In addition to the state modifiers log and the minimal state, a fullnode also contains two more entities. \textit{Memory pool} contains transactions not yet included into blocks~(and there is no guarantee of inclusion for them). \textit{Vault} contains some node-specific information a node is extracting from the log. For example, it could contain values encoded in some or all OP\_RETURN instructions, or all the transactions for specific addresses. The well-known example of vault is \textit{wallet} which contains private keys as well as transaction associated with their public images.
+
+
+
 \section{Peer-to-Peer Network}	
 
 Blockchain is maintained in a peer-to-peer network. For simplicity we are starting with a network where all the nodes 
@@ -574,6 +580,8 @@ Overview of Bitcoin P2P layer along with description of possible Eclipse attacks
 \section{Introduction}     % section 2.1
 
 Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code. What do you need to do in order to build something on Scorex, is to implement all the abstract interfaces, or just some of them and use ready modules for missing parts.
+
+
 
 \subsection{*Scala Language}         % subsection 2.1.1
 
@@ -630,13 +638,6 @@ trait Proof[P <: Proposition] extends BytesSerializable {
 A box is a minimal state element. An unspent output in Bitcoin is a box. An account in certain state in Nxt or Ethereum is also a box. Basically, a box is about some value(how many system tokens are associated with it), and some proposition which protects a box from being spent by anyone but a party(or parties) knowing how to satisfy the proposition.
 
 \begin{lstlisting}
-trait Box[P <: Proposition] extends BytesSerializable {
-  val proposition: P
-
-  val value: Long
-
-  val id: Array[Byte]
-}
 \end{lstlisting}
 
 
@@ -647,29 +648,11 @@ trait Box[P <: Proposition] extends BytesSerializable {
 As it was shown in the Chapter 1[TODO: link], a transaction and a minimal state could be defined via each other: a transaction is a state modifier, which also could be valid or not against a state, and applicable if and only if it is valid. A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so applicable to it or not. 
 
 \begin{lstlisting}
-abstract class Transaction[P <: Proposition, TX <: Transaction[P, TX]] extends BytesSerializable with JsonSerializable {
-  def validate(state: MinimalState[P, TX]): Try[Unit]
-  def changes(state: MinimalState[P, TX]): Try[StateChanges[P]]
-
-  ...
-}
 \end{lstlisting}
 
 We are defining functional interface for minimal state below:
 
 \begin{lstlisting}
-trait MinimalState[P <: Proposition, TX <: Transaction[P, TX]] {
-  def version: Int
-
-  def isValid(tx: TX): Boolean = tx.validate(this).isSuccess
-
-  def processBlock(block: Block[P, _, _]): Try[Unit]
-  def rollbackTo(height: Int): Try[Unit]
-
-  def closedBox(boxId: Array[Byte]): Option[Box[P]]
-
-  ...
-}
 \end{lstlisting}
 
 So a minimal state knows its current version, can apply a block, and also rollback to a previous version. To validate a transaction, it just calls \textit{validate} function of a transaction and checks its result.
@@ -685,7 +668,10 @@ So a minimal state knows its current version, can apply a block, and also rollba
 
 \end{lstlisting}
 
-\subsection{Transactional Block Data}
+\subsection{}
+
+\subsection{Node View Holder}
+
 
 \begin{lstlisting}
 
