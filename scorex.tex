@@ -94,14 +94,12 @@ The intended audience is developers wanting to create or experiment with such ap
 
 In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Nxt as three distinct applications of blockchain. Scorex gives the underlying framework for developing any of the three apps (and several others) by writing a thin layer of code. 
 
-
-[TODO: AC: we have more complex division now, fix the list below?]
-The main components of Scorex are:
-\begin{enumerate}
-	\item Mechanism for creating a genesis block and subsequent blocks using some transferable tokens (transactions).
-	\item Mechanism for forming consensus as to when a block is accepted in the blockchain (proof-of-work, proof-of-stake, etc).
-	\item Mechanism for defining arbitrary rules as to when a token transfer is valid (Bitcoin UTXOs, NXT accounts, Namecoin domains).
-\end{enumerate}
+%%The main components of Scorex are:
+%%\begin{enumerate}
+%%	\item Mechanism for creating a genesis block and subsequent blocks using some transferable tokens (transactions).
+%%	\item Mechanism for forming consensus as to when a block is accepted in the blockchain (proof-of-work, proof-of-stake, etc).
+%%	\item Mechanism for defining arbitrary rules as to when a token transfer is valid (Bitcoin UTXOs, NXT accounts, Namecoin domains).
+%%\end{enumerate}
 
 
 \section{Organization}
@@ -123,7 +121,7 @@ A blockchain is an infinite sequence $f_0, f_1, f_2, \ldots \in F$ of functions 
 \begin{enumerate}
 	\item $f_i \neq f_{i+1}$ (there must be at least one state change in the boxes).
 	\item $\forall (x, y) \in \mathbb{Z}: f_i(x, y) \leq f_{i+1}(x, y)$ (state cannot decrease).
-	\item $\forall (x, y) \in \mathbb{Z}: f_i(x, y)+1 \geq f_{i+1}(x, y)$ (state cannot increase > 1).
+	\item $\forall (x, y) \in \mathbb{Z}: f_i(x, y)\cdot f_{i+1}(x, y) = 0$ (state cannot increase > 1).
 \end{enumerate}
 
 $f_0$ is called the {\em genesis mapping} or {\em genesis state}. Each mapping $f_i$ represents a snapshot of the system at iteration $i$, denoted $f_i(\mathbb{Z})$, which indicates the state of each box. A {\em block} $i$ gives the deltas between two successive states $(f_{i+1}, f_{i})$ and is essentially defines a set of boxes to open and close. Formally, {\em block}$_{i}$ is the set $\{(x, y)|f_{i+1}(x, y)\neq f_i(x, y)\}$. The transformation rules ensure that there is a unique block for each iteration. While this is enough to define a generic blockchain, Bitcoin has some additional rules:
@@ -132,7 +130,7 @@ $f_0$ is called the {\em genesis mapping} or {\em genesis state}. Each mapping $
 	\item For any block $b_{i}$, $$\sum_{(x, y)\in b_{i}} y\cdot f_{i+1}(x, y) +\sum_{(x, y)\in b_{i}} y\cdot f_{i}(x, y) \leq  r(i),$$ for some {\em reward} function $r$.
 	
 	Note that $\sum_{(x, y)\in b_{i}} y\cdot f_{i}(x, y)$ is the negative of the sum of amount in all the boxes to be closed in this iteration and $\sum_{(x, y)\in b_{i}} y\cdot f_{i+1}(x, y)$ is the sum for the boxes to be opened. Thus, the LHS is the amount of bitcoins `created' in this block minus the amount bitcoins `destroyed'. The inequality says that the net amount of bitcoins created in a block cannot be more than the reward. 
-	\item For each box $(x, y)\in b_i$, there is a {\em transaction} that acts as the {\em witness} of opening or	closing that box. A transaction acts like a proof that a particular state change was authorized via some public key, which will be discussed in detail in the next chapter. 
+	\item For each box $(x, y)\in b_i$, there is a {\em transaction} that acts as the {\em witness} of opening or	closing that box. A transaction acts like a proof that a particular state change was authorized via some public key, which will be discussed in detail in the next chapter. The transaction must confirm to certain consensus rules discussed later.
 \end{enumerate}
 
 At any iteration $i$ of the blockchain, older snapshots $(f_0, f_1, f_2, \ldots)$ are considered tamper-resistant while fresh copies ($\ldots, f_{i-2}, f_{i-1}, f_i$) may be susceptible to deletion or tampering, depending on the computational power of the attacker. However, after the snapshot becomes sufficiently old, it can be considered as tamper-proof for all practical purposes. The rules of the protocol ensure that if all honest nodes start with the same initial state $f_0$ and apply the same blocks successively then they will have the same snapshots $f_i$ at any iteration $i$. The task here is to ensure that the blocks are always applied in the right order. This is a consensus problem, and is solved in Bitcoin using a concept called {\em proof-of-work} -- the solution to a hard puzzle. The idea is that not everyone gets to choose which block to apply to reach the next valid snapshot, but only by someone who has invested a large amount of computing power and provides the proof on a first-come-first-serve basis. Snapshots are connected -- each block is linked to the previous one via a cryptographic hash so that if someone else provides a proof-of-work and the network accepts it, then all existing work for ``winning'' this block is invalidated and the contenders have to start again with the newly accepted block as the starting point. To incentivize nodes to expend work, each accepted snapshot comes with some reward in the form of tokens generated (additional states that benefit the node solving the puzzle). 
@@ -310,35 +308,50 @@ If the output of the hash contains at least a specified number of leading zeros,
 
 \paragraph{Transaction pool management:} Each client maintains a pool of unverified (but valid) transactions. An element is removed from this pool when that transaction gets included in a mined block. This ensures that even if a transaction is not included in an immediate block, it is kept in the pool until it gets mined. If a transaction is not confirmed within 72 hours then it forgotten. 
 
-%%\paragraph{Selecting a unique chain:} One of the issues in Bitcoin is to select the ``valid'' chain given more than one contender. It is conceivable that an attacker (or network failure) can cause two or more competing chains to be temporar
-%
-%simultaneously present and dividntire network, with some holding each version. %is able to generate a chain longer than the one that honest nodes hold. 
+\section{Block Structure} 
 
-\section{Scalability}
-
-Before discussing scalability, we describe the blockchain structure in more detail.
-
-\textbf{Block Structure:} A block consists of a variable-size {\em payload} containing the actual transactions in a Merkle tree structure and a fixed-size {\em header} describing the payload. The header contains: 
+A block consists of a variable-size {\em payload} containing the actual transactions in a Merkle tree structure and a fixed-size {\em header} describing the payload. The header is 80 bytes and contains: 
 \begin{enumerate}
 	\item The root hash of the Merkle tree of transactions.
 	\item The current block index and the previous block-header hash.
-	\item The nonce, the corresponding difficulty level and a timestamp.
+	\item The nonce, the corresponding difficulty target and a timestamp.
 \end{enumerate}
 
 Earlier we stated (for simplicity) that the PoW is computed as a hash of the entire block. However, this is not true. The PoW is computed only on the header and not the payload. This enables nodes to verify PoW using just header information, while the payload can be verified later via the root hash. 
 
-\textbf{Why do we need to store?} As discussed earlier, at the minimum each node must store the unopened boxes in a UTXO database. Additionally, each node may store the entire blockchain starting from the genesis block to help other clients to bootstrap. 
+\paragraph{Example of header:} The following is an example of a block header\footnote{https://bitcoin.org/en/developer-reference\#block-headers}:\\
+\texttt{\underline{02000000}b6ff0b1b1680a2862a30ca44d346d9e8910d334beb48ca0c00000000}\\
+\texttt{00000000\underline{9d10aa52ee949386ca9385695f04ede270dda20810decd12bc9b048a}}\\
+\texttt{\underline{aab31471}24d95a54\underline{30c31b18}fe9f0864}
 
-[...]
+The different sections are identified by alternating underlines:
+\begin{enumerate}
+	\item Block version: \texttt{02000000} (decodes to 2).
+	\item Hash of previous block's header: \texttt{b6ff0b1 $\ldots$ 48ca0c0000000000000000}.
+	\item Merkle root hash of payload: \texttt{9d10aa52 $\ldots$    decd12bc9b048aaab31471}.
+	\item Unix timestamp: \texttt{24d95a54} (decodes to 1415239972).
+	\item Difficulty target: \texttt{30c31b18} (decodes to $1bc330_{\texttt{hex}} \cdot 256^{18_{\texttt{hex}}-3}$).
+	\item Nonce: \texttt{fe9f0864}.
+\end{enumerate}
+	
+\paragraph{Computing the Merkle root:} Merkle tree is a technique for authenticating small slices (few transactions) from a large chunk of data (entire payload) without having to authenticate the entire data (however, the entire data can be authenticated if needed). The transactions are first arranged in some order that satisfies the consensus rules given below. Their transaction hashes (TXIDs) are considered as the last row (leaves) of the tree that will be constructed. Starting with the last row, each row is iteratively processed to get the previous (parent) row until the currently processing row has only one node, the Merkle root. 
+If the currently processing row has two or more nodes, we first ensure that there are even number (say $n$) of them, by repeating the last node if necessary. Then we pair the nodes to form $n/2$ pairs. Each pair $(L, R)$ is concatenated and its hash $\texttt{SHA256}(\texttt{SHA256}(L||R))$ forms the parent for the next iteration. This process is repeated until the root is reached. 
 
-\textbf{What can be pruned?} If all the closed boxes generated in a particular block have been opened, that block is not needed for validation (we need blocks to validate/proof that our UTXO database is valid). Thus we can only store the headers for those blocks.\footnote{However, in the existing protocol, we cannot prove to another node that all generated boxes in a pruned block have been used up. A proposal of {\em block-level aggregation} of transactions could allow that.}
+\paragraph{Consensus rules:} A client rejects block that do not follow the below rules:
+\begin{enumerate}
+	\item The coinbase transaction's TXID is always placed first.
+	\item Any input within this block can spend an output which also appears in this block (assuming the spend is otherwise valid). However, the TXID corresponding to the output must be placed at some point before the TXID corresponding to the input. This ensures that any program parsing block chain transactions linearly will encounter each output before it is used as an input.
+\item If a block only has a coinbase transaction, the coinbase TXID is used as the merkle root hash.
+\end{enumerate}
+
+The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same orders as in the Merkle tree.
+The details of transactions is described in the next chapter.
 
 
-[...]
+
+
 
 \section{Security and Privacy} 
-
-%Before describing se 
 
 At the heart of Bitcoin is the concept of the blockchain, a distributed global ledger of transactions that each node holds. The goal of the protcol is to ensure {\em eventual consistency}; if the network is completely synchronized then all nodes will have an identical copy of the blockchain. Thus, the primary goal of Bitcoin is to select the ``valid'' chain given more than one contenders. 
 
@@ -347,6 +360,11 @@ At the heart of Bitcoin is the concept of the blockchain, a distributed global l
 
 \paragraph{Difficulty level adjustment:} Difficulty is a measure of the hardness of the puzzle and can be quantified by $x$, the maximum possible number representable with that many leading zeros. 
 A difficulty level of $d$ implies that $d = 2^{256}/x$. Thus, the smaller $x$ is, the larger the difficulty. The difficulty is adjusted every 2016 blocks based on the time it took to find the previous 2016 blocks. At the desired rate of one block each 10 minutes, 2016 blocks would take exactly two weeks to find. If the previous 2016 blocks took more than two weeks to find, the difficulty is reduced. If they took less than two weeks, the difficulty is increased. The change in difficulty is in proportion to the amount of time over or under two weeks the previous 2016 blocks took to find.
+
+\paragraph{Storage Requirements:} As discussed earlier, at the minimum each node must store the unopened boxes in a UTXO database to ensure that the spender actually holds those bitcoins. Additionally, each node may store the entire blockchain starting from the genesis block to help other clients to bootstrap. 
+
+\paragraph{What can be pruned?} If all the closed boxes generated in a particular block have been opened, that block is not needed for validation (we need blocks to validate/proof that our UTXO database is valid). Thus we can only store the headers for those blocks.\footnote{However, in the existing protocol, we cannot prove to another node that all generated boxes in a pruned block have been used up. A proposal of {\em block-level aggregation} of transactions could allow that.}
+
 
 
 \paragraph{Security Requirements:} For security, we require the following: (1) The inability of an attacker to send bitcoins from addresses whose private key is not known, (2) The inability of an attacker to double-spend bitcoins or reverse a transaction, and (3) The inability of an attacker to prevent some valid transactions from confirming. The first requirement is satisfied if the underlying signature scheme is existentially unforgeable. The second and third requirements, formalized respectively as {\em persistence} and {\em liveness} in~\cite{Garay2015}, can be achieved if the underlying proof-of-work (PoW) based consensus system satisfies the following two properties~\cite{Garay2015}:
@@ -370,11 +388,6 @@ If the difficulty level is sufficiently high and the network synchronization tim
 \paragraph{Privacy:} The addresses serve as pseudonyms and provide some anonymity. However, bitcoin does not provide true anonymity because the inputs are linked to the previous outputs via a reference.
 
 
-
-% dicuss about block size, bandwidth requirements
-% discuss minimal state, why we need to store utxo
-% why we need history
-
 \chapter{A Blockchain System Design}             % chapter 2
 \section{Introduction}     
 
@@ -393,12 +406,18 @@ Like any multiparty protocol, Bitcoin needs {\em correctness} (`valid transactio
 
 %We will discuss how correctness 
 %Correctness is trivially guaranteed because if all parties behave correctly, then the protocol indeed behaves as expected [...]. For soundness
-
 \section{Cryptography}
 
-[TODO: public key cryptography]
+At the minimum, Bitcoin requires the following cryptographic primitives:
+\begin{enumerate}
+	\item One-way hash functions: A one-way function is easy to compute in the forward direction but difficult to reverse. A hash function maps arbitrary sized strings to fixed size ones. We require the hash to be {\em collision resistance} (hard to find two arbitrary preimages with same hash) and {\em preimage resistance} (given hash, find any preimage). A good hash function can be modeled using a {\em random oracle}, where there is no better way to break it than by brute force. By breaking, we imply finding a preimage satisfying certain predicate on the output. 
+	\item Signature scheme: A signature scheme is a type of public-key cryptography (i.e. based on two keys), where a private key is used to generate a {\em signature} on a message and the public key is used to verify the signature. Only knowledge of private key and the message allows creating a valid signature. The owner of a public key also cannot later deny having created the signature. 
+	We require that the attacker cannot generate valid signatures on any arbitrary message even using the signing oracle on any other arbitrary messages. This is called UF-CMA (unforgeability under adaptive chosen message attack).
+	
+	We actually require a stronger property called {\em strong unforgeability} (SUF-CMA). This requires that an attacker having access to the signing oracle for arbitrary messages cannot generate a {\em new} signature on a message whose signature has already been queried. Unfortunately, the signatures used in Bitcoin do not satisfy SUF-CMA (they do satisfy UF-CMA though). This has led to the {\em malleability} problem in Bitcoin.
+	
+\end{enumerate}
 
-[TODO: hash functions]
 
 
 \section{Transactional Layer}
@@ -573,6 +592,24 @@ In most cases the fact of blocktree existence in omitted. A node is storing a bl
 
 \subsection{Consensus Layer Generalization}
 
+\subsection{Full Node View}
+
+Full node is a node which holds at least some state enough to check whether an arbitrary transaction is valid against it and so applicable to it or not. We have defined such a state, \textit{minimal state}, above. Nodes are also storing a history from which the minimal state has been rendered. In addition to the state modifiers log and the minimal state, a fullnode also contains two more entities. \textit{Memory pool} contains transactions not yet included into blocks~(and there is no guarantee of inclusion for them). \textit{Vault} contains some node-specific information a node is extracting from the log. For example, it could contain values encoded in some or all OP\_RETURN instructions, or all the transactions for specific addresses. The well-known example of vault is \textit{wallet} which contains private keys as well as transaction associated with their public images.
+
+With the four entities being defined we can explicitly state a node view type now: \(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \).
+
+The quadruple could be modified by applying whether an offchain transaction or a block coming from a local side(user issuing a transaction to a local node, mining software generating a block) or from remote peer. We can state some rules of the node view  modification even for the most abstract definition given:
+
+\begin{itemize}
+\item an offchain transaction modifies vault and memory pool. Atomicity in this update is not critical.
+
+\item for a persistent node view modifier atomicity for an update is strictly needed! If history is producing rollback sude-effect, other parts must handle it properly before applying an update. This sounds trivial, but in fact many implementation are spending years fighting with bugs related to inconsistency and read-when-update issues.
+\end{itemize}
+
+
+[TODO: pseudocode? or Scala code in Scorex counter-part?]
+
+
 \section{Peer-to-Peer Network}	
 
 Blockchain is maintained in a peer-to-peer network. For simplicity we are starting with a network where all the nodes 
@@ -581,10 +618,20 @@ Blockchain is maintained in a peer-to-peer network. For simplicity we are starti
 
 
 
-\section{Complications}
+\section{Complications And Alternative designs}
 
-fully prunable outputs 
-ZCash
+In additions to the systems described in this chapter as well as many other systems used around, there are many designs existing only on paper. In this section we quickly observe some proposals. The goal of Scorex is to help to get them from papers to prototype implementations. 
+
+[TODO: fully prunable outputs]
+[TODO: ZCash]
+
+\subsection{Rollerchain}
+
+Rollerchain 
+
+\subsection{GHOST}
+
+\subsection{Bitcoin-NG and ByzCoin}
 
 \section{Conclusion}
 
@@ -600,6 +647,8 @@ Overview of Bitcoin P2P layer along with description of possible Eclipse attacks
 \section{Introduction}     % section 2.1
 
 Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code. What do you need to do in order to build something on Scorex, is to implement all the abstract interfaces, or just some of them and use ready modules for missing parts.
+
+
 
 \subsection{*Scala Language}         % subsection 2.1.1
 
@@ -656,13 +705,6 @@ trait Proof[P <: Proposition] extends BytesSerializable {
 A box is a minimal state element. An unspent output in Bitcoin is a box. An account in certain state in Nxt or Ethereum is also a box. Basically, a box is about some value(how many system tokens are associated with it), and some proposition which protects a box from being spent by anyone but a party(or parties) knowing how to satisfy the proposition.
 
 \begin{lstlisting}
-trait Box[P <: Proposition] extends BytesSerializable {
-  val proposition: P
-
-  val value: Long
-
-  val id: Array[Byte]
-}
 \end{lstlisting}
 
 
@@ -673,29 +715,11 @@ trait Box[P <: Proposition] extends BytesSerializable {
 As it was shown in the Chapter 1[TODO: link], a transaction and a minimal state could be defined via each other: a transaction is a state modifier, which also could be valid or not against a state, and applicable if and only if it is valid. A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so applicable to it or not. 
 
 \begin{lstlisting}
-abstract class Transaction[P <: Proposition, TX <: Transaction[P, TX]] extends BytesSerializable with JsonSerializable {
-  def validate(state: MinimalState[P, TX]): Try[Unit]
-  def changes(state: MinimalState[P, TX]): Try[StateChanges[P]]
-
-  ...
-}
 \end{lstlisting}
 
 We are defining functional interface for minimal state below:
 
 \begin{lstlisting}
-trait MinimalState[P <: Proposition, TX <: Transaction[P, TX]] {
-  def version: Int
-
-  def isValid(tx: TX): Boolean = tx.validate(this).isSuccess
-
-  def processBlock(block: Block[P, _, _]): Try[Unit]
-  def rollbackTo(height: Int): Try[Unit]
-
-  def closedBox(boxId: Array[Byte]): Option[Box[P]]
-
-  ...
-}
 \end{lstlisting}
 
 So a minimal state knows its current version, can apply a block, and also rollback to a previous version. To validate a transaction, it just calls \textit{validate} function of a transaction and checks its result.
@@ -707,33 +731,17 @@ So a minimal state knows its current version, can apply a block, and also rollba
 \subsection{Memory Pool}
 
 \begin{lstlisting}
-trait UnconfirmedTransactionsDatabase[TX <: Transaction[_, TX], TData <: TransactionalData[TX]] {
-  def putIfNew(tx: TX): Boolean
 
-  def all(): Seq[TX]
 
-  def getById(id: Array[Byte]): Option[TX]
-
-  def packUnconfirmed(): TData
-
-  def clearFromUnconfirmed(data: TData): Unit
-
-  def onNewOffchainTransaction(transaction: TX): Unit
-
-  def remove(tx: TX)
-  
-}
 \end{lstlisting}
 
-\subsection{Transactional Block Data}
+\subsection{}
+
+\subsection{Node View Holder}
+
 
 \begin{lstlisting}
-trait TransactionalData[TX <: Transaction[_, TX]] extends BytesSerializable with JsonSerializable {
-  val mbTransactions: Option[Traversable[TX]]
 
-  val headerOnly = mbTransactions.isDefined
-  ....
-}
 \end{lstlisting}
 
 \subsection{Transactional Module}
@@ -745,11 +753,7 @@ trait TransactionalData[TX <: Transaction[_, TX]] extends BytesSerializable with
 \subsection{Block}
 
 \begin{lstlisting}
-class Block[P <: Proposition, TData <: TransactionalData[_ <: Transaction[P, _]], CData <: ConsensusData](
-                                                                                      val version: Byte,
-                                                                                      val timestamp: Long,
-                                                                                      val consensusData: CData,
-                                                                                      val transactionalData: TData)
+
 \end{lstlisting}
 
 \subsection{History and Blockchain}
