@@ -130,7 +130,7 @@ $f_0$ is called the {\em genesis mapping} or {\em genesis state}. Each mapping $
 	\item For any block $b_{i}$, $$\sum_{(x, y)\in b_{i}} y\cdot f_{i+1}(x, y) +\sum_{(x, y)\in b_{i}} y\cdot f_{i}(x, y) \leq  r(i),$$ for some {\em reward} function $r$.
 	
 	Note that $\sum_{(x, y)\in b_{i}} y\cdot f_{i}(x, y)$ is the negative of the sum of amount in all the boxes to be closed in this iteration and $\sum_{(x, y)\in b_{i}} y\cdot f_{i+1}(x, y)$ is the sum for the boxes to be opened. Thus, the LHS is the amount of bitcoins `created' in this block minus the amount bitcoins `destroyed'. The inequality says that the net amount of bitcoins created in a block cannot be more than the reward. 
-	\item For each box $(x, y)\in b_i$, there is a {\em transaction} that acts as the {\em witness} of opening or	closing that box. A transaction acts like a proof that a particular state change was authorized via some public key, which will be discussed in detail in the next chapter. The transaction must confirm to certain consensus rules discussed later.
+	\item For each box $(x, y)\in b_i$, there is a {\em transaction} that acts as the {\em witness} of opening or	closing that box. A transaction acts like a proof that a particular state change was authorized via some public key, which will be discussed in detail in the next chapter. 
 \end{enumerate}
 
 At any iteration $i$ of the blockchain, older snapshots $(f_0, f_1, f_2, \ldots)$ are considered tamper-resistant while fresh copies ($\ldots, f_{i-2}, f_{i-1}, f_i$) may be susceptible to deletion or tampering, depending on the computational power of the attacker. However, after the snapshot becomes sufficiently old, it can be considered as tamper-proof for all practical purposes. The rules of the protocol ensure that if all honest nodes start with the same initial state $f_0$ and apply the same blocks successively then they will have the same snapshots $f_i$ at any iteration $i$. The task here is to ensure that the blocks are always applied in the right order. This is a consensus problem, and is solved in Bitcoin using a concept called {\em proof-of-work} -- the solution to a hard puzzle. The idea is that not everyone gets to choose which block to apply to reach the next valid snapshot, but only by someone who has invested a large amount of computing power and provides the proof on a first-come-first-serve basis. Snapshots are connected -- each block is linked to the previous one via a cryptographic hash so that if someone else provides a proof-of-work and the network accepts it, then all existing work for ``winning'' this block is invalidated and the contenders have to start again with the newly accepted block as the starting point. To incentivize nodes to expend work, each accepted snapshot comes with some reward in the form of tokens generated (additional states that benefit the node solving the puzzle). 
@@ -344,8 +344,8 @@ If the currently processing row has two or more nodes, we first ensure that ther
 \item If a block only has a coinbase transaction, the coinbase TXID is used as the merkle root hash.
 \end{enumerate}
 
-The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same orders as in the Merkle tree.
-The details of transactions is described in the next chapter.
+\paragraph{Payload:} The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same orders as in the Merkle tree.
+
 
 
 
@@ -612,7 +612,7 @@ The quadruple could be modified by applying whether an offchain transaction or a
 
 \section{Peer-to-Peer Network}	
 
-Blockchain is maintained in a peer-to-peer network. For simplicity we are starting with a network where all the nodes 
+Blockchain is maintained in a peer-to-peer network. For simplicity we are starting with a network where all the nodes [...]
 
 \section{Incentives}
 
@@ -633,6 +633,13 @@ Rollerchain
 
 \subsection{Bitcoin-NG and ByzCoin}
 
+Bitcoin-NG was proposed to solve two main issues in Bitcoin: 
+\begin{enumerate}
+	\item {\em Reduce confirmation time:} Current bitcoin transaction require an average of 10 minutes for the first confirmation. In Bitcoin-NG, the first confirmation is very fast (within 30 seconds; roughly the time for a message to cross the network). 
+	\item {\em Increase transaction processing bandwidth:} Furthermore, much more transactions can be inserted into the blockchain between two sucessive PoWs. This is only limited by bandwitdh and processing constraints of miners.
+\end{enumerate}
+
+The main idea in Bitcoin-NG is to remove the link between transaction confirmations and the {\em leader selection}. A leader is essentially someone who's PoW is accepted. In NG, the leader is still selected based on PoW but the block selecting the leader (the {\em key-block}) does not contain transactions. Rather the currently selected leader (i.e., the public key) has the sole power to decide the transactions for the blockchain in several {\em micro-blocks} until the next leader is selected. The leader adds the transaction without much delay, ensuring that transactions get confirmed (with one PoW) very quickly. Furthermore, there is no limit to the number of micro-blocks that can be inserted, ensuring that the throughput of the network is high.
 \section{Conclusion}
 
 
@@ -641,6 +648,7 @@ Rollerchain
 Proof-of-Work and blockchain were introduced in the foundational Bitcoin whitepaper~\cite{Nakamoto2008}.
 
 Overview of Bitcoin P2P layer along with description of possible Eclipse attacks(partly fixed to the moment) against it could be found in~\cite{heilman2015eclipse}
+
 
 
 \chapter{Scorex}           % chapter 2
