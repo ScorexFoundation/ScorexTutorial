@@ -631,15 +631,33 @@ Rollerchain
 
 \subsection{GHOST}
 
-\subsection{Bitcoin-NG and ByzCoin}
+\subsection{Bitcoin-NG}
 
-Bitcoin-NG was proposed to solve two main issues in Bitcoin: 
+Bitcoin-NG (or simply NG) was proposed to solve two main issues in Bitcoin: 
 \begin{enumerate}
-	\item {\em Reduce confirmation time:} Current bitcoin transaction require an average of 10 minutes for the first confirmation. In Bitcoin-NG, the first confirmation is very fast (within 30 seconds; roughly the time for a message to cross the network). 
-	\item {\em Increase transaction processing bandwidth:} Furthermore, much more transactions can be inserted into the blockchain between two sucessive PoWs. This is only limited by bandwitdh and processing constraints of miners.
+	\item {\em Reduce confirmation time:} Current bitcoin transactions require an average of 10 minutes for the first confirmation. In NG, the first confirmation is very fast (within 30 seconds; roughly the time to cross the network). 
+	\item {\em Increase transaction processing bandwidth:} Furthermore, much more transactions can be inserted into the blockchain between two successive PoWs. This is only limited by bandwidth and processing constraints of miners.
 \end{enumerate}
 
-The main idea in Bitcoin-NG is to remove the link between transaction confirmations and the {\em leader selection}. A leader is essentially someone who's PoW is accepted. In NG, the leader is still selected based on PoW but the block selecting the leader (the {\em key-block}) does not contain transactions. Rather the currently selected leader (i.e., the public key) has the sole power to decide the transactions for the blockchain in several {\em micro-blocks} until the next leader is selected. The leader adds the transaction without much delay, ensuring that transactions get confirmed (with one PoW) very quickly. Furthermore, there is no limit to the number of micro-blocks that can be inserted, ensuring that the throughput of the network is high.
+While Bitcoin is retrospective based (i.e., the PoW captures transactions created {\em before} the PoW was formed), NG is forward-looking in that the PoW enables a miner (aka {\em leader} in NG) to confirm transactions in the future. 
+
+The main idea in NG is to remove the link between transaction confirmations and the {\em leader selection}. A leader is essentially someone who's PoW is accepted. In NG, the leader is still selected based on PoW but the block selecting the leader (the {\em key-block}) does not contain transactions. Rather the currently selected leader (i.e., the public key) has the sole power to decide the transactions for the blockchain in several {\em micro-blocks} until the next leader is selected. The leader adds the transaction without much delay, ensuring that transactions get confirmed (with one PoW) very quickly. Furthermore, there is no limit to the number of micro-blocks that can be inserted, ensuring that the throughput of the network is high.
+We summarize the main features of NG:
+\begin{enumerate}
+	\item Two types of blocks: {\em key blocks} that contain the PoW, a reference to the previous block and a coinbase (reward) transaction but no other transactions. The key block additionally gives the miner the ability to create several {\em micro-blocks} containing one or more transactions until the next PoW (i.e., key-block is found). Miners only compete for key-blocks.
+	\item The fees is split into a 40-60 ratio, where 40\% goes to the owner of the current PoW and the rest to the next PoW.
+\end{enumerate}
+
+\subsection{ByzCoin}
+
+ByzCoin builds on the ideas of NG of separating the confirmations and leader selection. There are several differences from NG discussed below:
+\begin{enumerate}
+	\item Two separate blockchains: The key blocks and micro-blocks are part of two different chains. A key-block links to the previous key-block (the {\em main chain}) and the micro-blocks form a {\em secondary chain} and also link to the corresponding key-block in the main chain. 
+	\item Different process for mining micro-blocks: While key-blocks are mined in a similar fashion to NG, the micro-blocks are mined using a the Practical Byzantine Fault Tolerant (PBFT) protocol~\cite{pbft} run by the leader. The group of members who participate (the {\em replicas}) are selected from a sliding window of miners who contributed a PoW in the last time-slice (say 24 hours). The amount voting power held by a miner is proportional to the amount of blocks contributed in that window.
+	\item Interactive consensus protocol: The replicas perform an interactive protocol using PBFT and combined signatures to obtain consensus on the micro-blocks to insert.
+\end{enumerate}
+
+The key difference with NG is that while a transaction is instantly confirmed in NG, it is not permanent in the case of dishonest miners because there is no control over how a miner generates micro-blocks. ByzCoin adds a level of consensus even for micro-blocks so the chance of those rolling back is negligible compared to NG.
 \section{Conclusion}
 
 
