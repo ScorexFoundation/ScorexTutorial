@@ -115,16 +115,22 @@ If you have heard of blockchain then you have indirectly heard of Bitcoin, the d
 \section{Blockchain and Boxes}
 
 
-Define $F$ to be the set of mappings $\mathbb{Z}\times\mathbb{Z} \mapsto \{-1, 0, 1\}$ over the integers. 
-Intuitively, each integer pair represents a `box' of type (public-key, amount). Each element from $F$ maps the pairs of such integers (i.e., all boxes) to one of three states: $-1, 0, 1$, indicating that the corresponding box is respectively {\em Unused} (never used), {\em Closed} (contains funds) and {\em Opened} (funds have been used).
+Define $F$ to be the set of mappings $\mathbb{Z}\times\mathbb{Z}^{+} \mapsto \{-1, 0, 1\}$ over the integers. 
+Each pair represents a `box' of type ((public-key, coinID), amount)\footnote{Each integer in the left of $\mathbb{Z}\times\mathbb{Z}^{+}$ is assumed to map to a unique pair of type (public-key, coinID), where coinID is some unique identifier for the coins. For now, it is sufficient to consider the left integer as some `ownership identifier' of the amount on the right.}. 
+
+Each element from $F$ maps the pairs of such integers (i.e., all boxes) to one of three states: $-1, 0, 1$, indicating that the corresponding box is respectively {\em Unused} (never used), {\em Closed} (contains funds) and {\em Opened} (funds have been used).
 A blockchain is an infinite sequence $f_0, f_1, f_2, \ldots \in F$ of functions from $F$ applied iteratively on $\mathbb{Z}$ such that: % each $f_i$ satisfies the following:
 \begin{enumerate}
 	\item $f_i \neq f_{i+1}$ (there must be at least one state change in the boxes).
-	\item $\forall (x, y) \in \mathbb{Z}: f_i(x, y) \leq f_{i+1}(x, y)$ (state cannot decrease).
-	\item $\forall (x, y) \in \mathbb{Z}: f_i(x, y)\cdot f_{i+1}(x, y) = 0$ (state cannot increase > 1).
+	\item $\forall (x, y) : f_i(x, y) \leq f_{i+1}(x, y)$ (state cannot decrease).
+	\item $\forall (x, y) : f_i(x, y)\cdot f_{i+1}(x, y) = 0$ (state cannot increase > 1).
 \end{enumerate}
 
-$f_0$ is called the {\em genesis mapping} or {\em genesis state}. Each mapping $f_i$ represents a snapshot of the system at iteration $i$, denoted $f_i(\mathbb{Z})$, which indicates the state of each box. A {\em block} $i$ gives the deltas between two successive states $(f_{i+1}, f_{i})$ and is essentially defines a set of boxes to open and close. Formally, {\em block}$_{i}$ is the set $\{(x, y)|f_{i+1}(x, y)\neq f_i(x, y)\}$. The transformation rules ensure that there is a unique block for each iteration. While this is enough to define a generic blockchain, Bitcoin has some additional rules:
+$f_0$ is called the {\em genesis mapping} or {\em genesis state}. Each mapping $f_i$ represents a snapshot of the system at iteration $i$, which indicates the state of each box. 
+The set $m_i=\{(x, y)| f_i(x, y) = 0\}$ is called the {\em minimal state} at iteration $i$. 
+
+A {\em block} $b_i$ gives the deltas between two successive states $(f_{i+1}, f_{i})$ and is essentially defines a set of boxes to open and close. Formally, $b_{i}$ is the set $\{(x, y)|f_{i+1}(x, y)\neq f_i(x, y)\}$. The transformation rules ensure that there is a unique block for each iteration. At any iteration $i$, a client needs only the current minimal state $m_i$ and the next block $b_i$ to compute the next minimal state. 
+While this is enough to define a generic blockchain, Bitcoin has some additional rules:
 
 \begin{enumerate}
 	\item For any block $b_{i}$, $$\sum_{(x, y)\in b_{i}} y\cdot f_{i+1}(x, y) +\sum_{(x, y)\in b_{i}} y\cdot f_{i}(x, y) \leq  r(i),$$ for some {\em reward} function $r$.
@@ -622,20 +628,42 @@ Blockchain is maintained in a peer-to-peer network. For simplicity we are starti
 
 In additions to the systems described in this chapter as well as many other systems used around, there are many designs existing only on paper. In this section we quickly observe some proposals. The goal of Scorex is to help to get them from papers to prototype implementations. 
 
-[TODO: fully prunable outputs]
+
+The various alternative designs are proposed to address some of the problems with Bitcoin explained below:
+\begin{enumerate}
+	\item Storage scalability: In Bitcoin, every node must store the entire blockchain (currently over 10 GB). This is a bottleneck as the blockchain becomes older. Proposals have been presented that allow pruning of the blockchain under certain assumptions. 
+	\item Memory usage: The UTXO set is something that needs to be kept in memory for fast validation. This set is currently several hundred MBs.
+	\item Rational behavior: If nodes behave rationally, they will not store the blockchain. Rather they will store only the UTXOs they are interested in. In the long run, this could lead to {\em tragedy of the commons}, where no one has a complete copy of the blockchain.
+	\item Privacy:
+	\item Delay in confirmations:
+	\item Transaction throughput:
+\end{enumerate}
+
+
 [TODO: ZCash]
+
+[TODO: fully prunable outputs]
+
+\subsection{SPV Clients}
+
+SPV (Simple Payment Verification) is a protocol for Bitcoin clients and is heavily used as an alternative to the Satoshi protocol. It is designed to enable lightweight clients that can sync in minutes instead of days and store only a fraction of the information (few MBs) compared to a full node (several GBs). 
+In this method, a node only verifies headers from the genesis block and validates only the last few full blocks (enough for rollback). The key idea in SPV is that we don't look at block height (the number of blocks since the genesis block) but rather the depth (the number of blocks mined since a particular payment has been confirmed). This allows clients to base their security on the PoW in the recent block headers and be able to verify payments made to them. 
 
 \subsection{Rollerchain}
 
-Rollerchain 
+Rollerchain (RC) is a proposal aimed to (1) reduce storage and (2) enforces nodes to store blocks and prevent tragedy of the commons. We will look at each separately. Firstly, assume that nodes are altruistic (i.e., they will store data to help others as long as the data is not too large). RC stores data only for verifing recent $k$ iterations for some security parameter $k$. This is similar to SPV mode. However, the difference is that instead of each node storing the blocks (the deltas of minimal states), the nodes store the minimal state itself. The block header contains a merkle root hash of the minimal state at the start of that iteration along with the merkle root hash of the transactions in that block. To address the second problem, a node is required to store a subset of the last $k$ minimal states obtained by hashing its public key. When mining, a node must provide PoW and additionally, a proof that the required states are indeed stored. [...]
+
+
 
 \subsection{GHOST}
+
+The GHOST protocol is designed for blockchains with very fast block times. As the network becomes less synchronized and blocks are generated fast, a significant amount of PoW will not make it into the main chain due to orphans. This leads to reduced security. The GHOST proposal makes use of the additional orphaned blocks to strengthen the network instead of rejecting them. Thus, two different branches will be compared not just by length but how `heavy' they are in terms of PoW. A GHOST protocol has various mechanisms for rewarding orphans. Etherium is one example that follows the GHOST strategy.
 
 \subsection{Bitcoin-NG}
 
 Bitcoin-NG (or simply NG) was proposed to solve two main issues in Bitcoin: 
 \begin{enumerate}
-	\item {\em Reduce confirmation time:} Current bitcoin transactions require an average of 10 minutes for the first confirmation. In NG, the first confirmation is very fast (within 30 seconds; roughly the time to cross the network). 
+	\item {\em Reduce confirmation time:} Current Bitcoin transactions require an average of 10 minutes for the first confirmation. In NG, the first confirmation is very fast (within 30 seconds; roughly the time to cross the network). 
 	\item {\em Increase transaction processing bandwidth:} Furthermore, much more transactions can be inserted into the blockchain between two successive PoWs. This is only limited by bandwidth and processing constraints of miners.
 \end{enumerate}
 

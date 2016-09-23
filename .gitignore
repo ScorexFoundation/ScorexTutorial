@@ -1,6 +1,7 @@
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.tcp
+*.tps
 *.lof
 *.log
 *.lot
