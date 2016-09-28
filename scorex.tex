@@ -745,10 +745,21 @@ Scala is functional, modular and also object-oriented language. There are severa
 
 \subsection{*Scala: Traits and Type Parameters}
 
-The basic piece in a sufficiently large Scala codebase is a \textit{trait}. Trait is an abstract(so non-instantiable) interface describing functions and values a concrete implementation(class or object) must provide to its users. We can also think about trait as of type and also a parametrized module. A trait could be parametrized not only by values, but also by types. 
+The basic piece in a sufficiently large Scala codebase is a \textit{trait}. Trait is an abstract~(so non-instantiable) interface describing functions and values a concrete implementation(class or object) must provide to its users. We can also think about trait as of type and also a parametrized module. A trait could be parametrized not only by values, but also by types. 
 
-Quick example: 
-[TODO: example]
+We provide a short example below. The trait~(and the type) \textit{Box} has a type parameter \textit{P} which must be a descendant of the type Proposition. 
+
+\begin{lstlisting}
+trait Box[P <: Proposition] extends BytesSerializable {
+  type Amount = Long
+
+  val proposition: P
+
+  val value: Long
+
+  val id: Array[Byte]
+}
+\end{lstlisting}
 
 \subsection{Propositions and Proofs}
 
