@@ -1,3 +1,7 @@
+## Intellij Idea Garbage
+.idea/
+
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.tcp
