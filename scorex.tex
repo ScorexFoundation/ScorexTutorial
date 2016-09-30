@@ -745,7 +745,11 @@ Proposition is a very abstract concept. The only property we require from it is 
 trait Proposition extends BytesSerializable
 \end{lstlisting}
 
-In most useful scenarios a proposition should be addressable. That is, it could be addressed by some identifier, or identifiers.
+In most cases, a proposition claims proof of knowledge of a secret to be provided in a non-interactive zero-knowledge form. For example, in most of popular signature schemes a digital signature is a non-interactive zero-knowledge proof of a private key knowledge. Scorex has a basic entity for that
+
+\begin{lstlisting}
+trait ProofOfKnowledgeProposition[S <: Secret] extends Proposition
+\end{lstlisting}
 
 A proof is an object which could satisfy a proposition given an additional input, namely a \textit{message}(e.g. transaction bytes). As well as a proposition, a proof could be serialized into bytes. 
 
@@ -756,6 +760,11 @@ trait Proof[P <: Proposition] extends BytesSerializable {
 }
 \end{lstlisting}
 
+For a \textit{ProofOfKnowledgeProposition} corresponding abstract proof is provided:  
+
+\begin{lstlisting}
+trait ProofOfKnowledge[S <: Secret, P <: ProofOfKnowledgeProposition[S]] extends Proof[P]
+\end{lstlisting}
 
 \subsection{Box}
 
