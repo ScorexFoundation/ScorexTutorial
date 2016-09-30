@@ -763,12 +763,13 @@ trait Proof[P <: Proposition] extends BytesSerializable {
 For a \textit{ProofOfKnowledgeProposition} corresponding abstract proof is provided:  
 
 \begin{lstlisting}
-trait ProofOfKnowledge[S <: Secret, P <: ProofOfKnowledgeProposition[S]] extends Proof[P]
+trait ProofOfKnowledge[S <: Secret, P <: ProofOfKnowledgeProposition[S]] 
+	extends Proof[P]
 \end{lstlisting}
 
 \subsection{Box}
 
-A box is a minimal state element. An unspent output in Bitcoin is a box. An account in certain state in Nxt or Ethereum is also a box. Basically, a box is about some value(how many system tokens are associated with it), and some proposition which protects a box from being spent by anyone but a party(or parties) knowing how to satisfy the proposition.
+A box is a minimal state element. An unspent output in Bitcoin is a box. An account in certain state in Nxt or Ethereum is also a box. Basically, a box is about some amount of tokens associated with it and also some proposition which protects a box from being spent by anyone but a party~(or parties) knowing how to satisfy the proposition.
 
 \begin{lstlisting}
 \end{lstlisting}
