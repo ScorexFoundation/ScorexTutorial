@@ -735,6 +735,8 @@ Scala is functional, modular and also object-oriented language. There are severa
 	\item Scala has powerful type system. Scorex is using typing features of the language extensively.
 \end{enumerate}
 
+\section{State Elements}
+
 \subsection{Propositions and Proofs}
 
 In the first place, we are getting into a mechanism to protect binary objects, e.g. transaction outputs, from non-permissioned access. We protect an object with a \textit{proposition}. Then in order to make an action with an object it is needed to provide a \textit{proof} for its proposition. 
@@ -781,6 +783,17 @@ trait Box[P <: Proposition] extends BytesSerializable {
   val id: Array[Byte]
 }
 \end{lstlisting}
+
+\section{A Node View}
+
+\subsection{A Node View And A View Modifier}
+
+As described in the section~\ref{fullnodeview}, a node in a blockchain network has a view of the world comprising of four entities: 
+\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited. 
+
+%This component, a \textit{node view holder}, modifies
+
+
 
 
 \subsection{A Transaction and Minimal State}
