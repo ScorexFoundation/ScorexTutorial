@@ -791,7 +791,28 @@ trait Box[P <: Proposition] extends BytesSerializable {
 As described in the section~\ref{fullnodeview}, a node in a blockchain network has a view of the world comprising of four entities: 
 \(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited. 
 
-%This component, a \textit{node view holder}, modifies
+This component, a \textit{node view holder}, modifies a node view it hold on getting whether an offchain object, so an offchain transaction, or an on-chain object, so a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc. Signatures of a trait and its sub-components are as follows:  
+
+\begin{lstlisting}
+trait NodeViewHolder[P <: Proposition, TX <: Transaction[P], 
+	PMOD <: PersistentNodeViewModifier[P, TX]] extends Actor {
+
+  type HIS <: History[P, TX, PMOD, HIS]
+  type MS <: MinimalState[P, _, TX, PMOD, MS]
+  type VL <: Vault[P, TX, VL]
+  type MP <: MemoryPool[TX, MP]
+
+
+  type NodeView = (HIS, MS, VL, MP) 
+\end{lstlisting}
+
+\subsection{A History}
+
+\subsection{A Minimal State}
+
+\subsection{A Vault}
+
+\subsection{A Memory Pool}
 
 
 
