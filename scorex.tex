@@ -810,49 +810,11 @@ trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
 
 \subsection{A Minimal State}
 
+A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so applicable to it or not. 
+
 \subsection{A Vault}
 
 \subsection{A Memory Pool}
-
-
-
-
-\subsection{A Transaction and Minimal State}
-
-As it was shown in the Chapter 1[TODO: link], a transaction and a minimal state could be defined via each other: a transaction is a state modifier, which also could be valid or not against a state, and applicable if and only if it is valid. A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so applicable to it or not. 
-
-\begin{lstlisting}
-\end{lstlisting}
-
-We are defining functional interface for minimal state below:
-
-\begin{lstlisting}
-\end{lstlisting}
-
-So a minimal state knows its current version, can apply a block, and also rollback to a previous version. To validate a transaction, it just calls \textit{validate} function of a transaction and checks its result.
-
-\subsection{Wallet}
-
-[TODO:]
-
-\subsection{Memory Pool}
-
-\begin{lstlisting}
-
-
-\end{lstlisting}
-
-\subsection{}
-
-\subsection{Node View Holder}
-
-
-\begin{lstlisting}
-
-\end{lstlisting}
-
-\subsection{Transactional Module}
-
 
 
 \section{Consensus Layer}
