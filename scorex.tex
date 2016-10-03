@@ -308,7 +308,7 @@ A node validates a transaction by validating every input as follows:
 
 The opened and created boxes are not immediately committed to the UTXO database. Rather, every node must wait for the network to ``confirm'' the changes implied by any given transaction.  
 Transactions are confirmed in bulk such that all nodes quickly reach a consensus on which set of transactions to include in the next database update. 
-To ensure consistency and fast consensus, not everyone gets to choose which transactions to commit but only those nodes who have a large amount of computing resources (called ``miners'').
+To ensure consistency and fast consensus, not everyone gets to choose which transactions to commit but only those nodes who have a large amount of computing resources (called ``miners'' or ``leaders'').
 
  
 \section{Confirming Transactions}
@@ -628,8 +628,8 @@ That is, the probability to generate a block is proportional to the amount of cr
 
 \subsection{Proof-of-Burn}
 
-{\em Proof-of-burn} is a method for distributed consensus and an alternative to Proof of Work and Proof of Stake. It can also be used for bootstrapping one cryptocurrency off of another.
-The idea is that miners should show proof that they destroyed some coins - that is, sent them to a verifiably unspendable address~\cite{stewart2012proof}. This is expensive from their individual point of view, just like proof of work; but it consumes no resources other than the burned underlying asset. To date, all proof of burn cryptocurrencies work by burning proof-of-work-mined cryptocurrencies, so the underlying mechanism remains proof-of-work.\footnote{https://en.bitcoin.it/wiki/Proof\_of\_burn}
+{\em Proof-of-burn} is a method for distributed consensus and an alternative to PoW and PoS. It can also be used for bootstrapping one cryptocurrency off of another.
+The idea is that miners should show proof that they destroyed some coins - that is, sent them to a verifiably unspendable address~\cite{stewart2012proof}. This is expensive from their individual point of view, just like proof of work; but it consumes no resources other than the burned underlying asset. However, to date, all proof of burn cryptocurrencies work by burning PoW-mined cryptocurrencies, so the underlying mechanism remains PoW.\footnote{https://en.bitcoin.it/wiki/Proof\_of\_burn}
 
 \subsection{Transaction History}
 
@@ -749,7 +749,7 @@ OWAS (One-Way Aggregate Signatures) is an approach proposed in~\cite{saxena2014i
 \section{ZeroCash}
 
 ZeroCash (ZCash)~\cite{sasson2014zerocash} is a blockchain based protocol designed for privacy. Since the data in the Bitcoin blockchain is public, true anonymity is not present. 
- ZCash can be considered an extension of ZeroCoin~\cite{miers2013zerocoin} (ZCoin), an earlier proposal. In order to describe ZCash, we will first describe ZCoin. 
+ ZCash can be considered an extension of ZeroCoin (ZCoin)~\cite{miers2013zerocoin}, an earlier proposal. In order to describe ZCash, we will first describe ZCoin. 
 
 Assume that all coins to be obfuscated are of a single denomination, say 1 BTC. ZCoin has its own currency (say Z), such that 1 Z = 1 BTC. There is a pool of obfuscated Z coins called {\em Zero-Pool}. Alice wants to anonymize her Bitcoin represented by serial number $c_A$. In order to do that, she begins by exchanging $c_A$ with an equivalent Z coin as follows. She generates a secret serial number $s_A$ and another secret $r_A$. Then she creates a commitment $z_A$ to $s_A$ using $r_A$ as randomness. That is, $z_A=$ COMM$_{r_A}(s_A)$, which is the Z coin Alice will use in exchange for $c_A$. All such exchanged coins are automatically added to the Zero-Pool. The commitment is computationally binding and perfectly hiding so no knowledge of $s_A$ or $r_A$ is leaked from $z_A$. Later on Alice will take back her $z_A$ using a transaction $t_A$, which is then automatically converted to 1 BTC. For anonymity, an adversary should not be able to link $t_A$ to $z_A$. This is achieved using Non-interactive Zero-Knowledge Proofs (NIZKs).\footnote{A NIZK proof is understood as follows. Let $N$ be an instance of a hard problem, such as finding the factors of a large integer. Let $P$ be a witness to this problem that Alice knows. There are three requirements of NIZK proofs: (1) Given a \textbf{random} string $R$, Alice can construct a short proof $\pi=$ PROOF$(P, R)$ such that VERIFY$(\pi, R, N)=true$ iff Alice `really knows $P$'. The concept of `knowing' is captured as follows: (2) If Alice can be fooled into using a \textbf{maliciously crafted $R$}, then $\pi$ will reveal $P$ with a high probability. (3) Additionally, Alice can construct pairs $(\pi', R')$ such that VERIFY$(\pi', R', N) = true$ without knowing any witness $P$ as long as \textbf{she selects $R'$}. Thus, the generation of $R$ is of outmost importance because if the verifier selects $R$, the secret is leaked and if the prover selects $R$ then the proof is not convincing. If given the transcript of a proof, we cannot distinguish between the cases (1) and (3), then the protocol is zero knowledge, intuitively because because given some $(\pi, R)$ pair, there is no way of knowing if it was generated using (1) or (3).} 
 
@@ -771,7 +771,7 @@ ZCash is an extension of ZCoin with the following differences:
 
 In this chapter we discussed various issues and concepts of a blockchain system such as Bitcoin. We also briefly described various Bitcoin-like systems that can be implemented with Scorex. We summarize this chapter below:
 
-Scorex generalizes the concept of the {\em UTXO Set} in Bitcoin to a {\em Minimal State}, the minimum amount of information needed by any node to validate transactions. Each Bitcoin UTXO is equivalent a locked {\em Box} that can be opened with a key. The lock can be considered a {\em proposition} and the key a {\em proof}. The proof in Bitcoin is simply the signature under the input public key and the proposition is a statement that validates the signature. 
+Scorex generalizes the concept of the UTXO Set in Bitcoin to a {\em Minimal State}, the minimum amount of information needed by any node to validate transactions. Each Bitcoin UTXO is equivalent a locked {\em Box} that can be opened with a key. The lock can be considered a {\em proposition} and the key a {\em proof}. The proof in Bitcoin is simply the signature under the input public key and the proposition is a statement that validates the signature. 
 
 Some of the alternate blockchain designs we described were:
 
