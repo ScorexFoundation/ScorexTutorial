@@ -90,34 +90,18 @@
 \chapter{Executive Summary}
 
 This paper describes the Scorex project and how it can be used to implement blockchain protocols~(such as Bitcoin). Scorex is a framework written in Scala with loosely coupled components. 
-The intended audience is developers wanting to create or experiment with such applications. Some basic knowledge of cryptography, data structures and cryptocurrencies is required. Some programming background is also required to understand the code-snippets. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
+The intended audience is developers willing to create or experiment with such blockchain cores. Some basic knowledge of cryptography, data structures and cryptocurrencies is required. Some programming background is also required to understand the code-snippets. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
 
-In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Ethereum as three distinct applications of blockchain. Scorex gives the underlying framework for developing any of the three apps (and several others) by writing a thin layer of code. 
+In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Ethereum as three distinct applications of blockchain. Scorex gives the underlying framework for developing any of the three applications (and several others) by writing a thin layer of code. 
 
-%%The main components of Scorex are:
-%%\begin{enumerate}
-%%	\item Mechanism for creating a genesis block and subsequent blocks using some transferable tokens (transactions).
-%%	\item Mechanism for forming consensus as to when a block is accepted in the blockchain (proof-of-work, proof-of-stake, etc).
-%%	\item Mechanism for defining arbitrary rules as to when a token transfer is valid (Bitcoin UTXOs, NXT accounts, Namecoin domains).
-%%\end{enumerate}
 \begin{enumerate}
 	\item {\em Bitcoin:} Decentralized currency~\cite{Nakamoto2008}.
 	
-		{\em Purpose:} Decentralization of money, easy to store and spend.
-		
-		%{\em Challenges:} Too much storage, wild price fluctuations, too much energy consumed, limited bandwidth of blocks, not suitable for micro-transactions.
+		{\em Purpose:} Decentralization of money, easy to store and spend.		
 	\item {\em Namecoin:} Decentralized DNS\footnote{http://namecoin.info/} (stores {\em key} $\rightarrow$ {\em value} mappings).
-
-		{\em Purpose:} Decentralization of DNS, difficult to sensor or shut down.
-		
-		%{\em Challenges:} Similar in design to Bitcoin; some similar challenges, low computing power so less attack resistant.
-	
-	\item {Ethereum:} Smart	contracts.
-	
+		{\em Purpose:} Decentralization of DNS, difficult to sensor or shut down.		
+	\item {Ethereum:} Smart	contracts.	
 	  {\em Purpose:} Enable trustless computing via decentralization.		
-		
-		%{\em Challenges:} Turing completeness causes complexity, may have security issues -- example DAO attack.
-	
 \end{enumerate}
 
 
