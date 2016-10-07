@@ -15,6 +15,22 @@
 
 \newtheorem{proposition}{Proposition}
 
+\def\shownotes{1}
+\def\notesinmargins{0}
+
+\ifnum\shownotes=1
+\ifnum\notesinmargins=1
+\newcommand{\authnote}[2]{\marginpar{\parbox{\marginparwidth}{\tiny %
+  \textsf{#1 {\textcolor{blue}{notes: #2}}}}}%
+  \textcolor{blue}{\textbf{\dag}}}
+\else
+\newcommand{\authnote}[2]{
+  \textsf{#1 \textcolor{blue}{: #2}}}
+\fi
+\else
+\newcommand{\authnote}[2]{}
+\fi
+\newcommand{\knote}[1]{{\authnote{\textcolor{green}{Alex notes}}{#1}}}
 
 % type user-defined commands here
 \usepackage[T1]{fontenc}
@@ -306,9 +322,9 @@ Roughly, the process of confirming transactions works as follows. First the mine
 
 \paragraph{Proof of Work:} Recall that we consider a block to be mined only if its hash contained at least a `specified' number of leading zeros. Assuming that the hash function behaves like a random oracle, the probability of a random image of $k$ bits having $x$ leading zeros is about $2^{-x}$ and the only way to obtain such a value is to try hashing around $2^x$ different blocks.
 
-This is called {\em Proof of Work} (PoW) because it is a witness that someone spent around $2^x$ CPU cycles. The sole purpose of PoW is to secure the blockchain against tampering. 
-Security in our sense implies the {\em persistence} of the blockchain, i.e., the inability to an attacker to fool a node into accepting a truncate or forked copy of the `true' blockchain (i.e., with different set of transactions that either don't include the real ones or double spend them). Bitcoin uses the following measure for difficulty: if the leading number of zeros are $x$ then {\em difficulty} $=2^{x}$ and {\em target} $=2^{k-x}$. 
-If two competing blockchain are presented, honest nodes select the ones with the highest {\em cumulative difficulty}. That is, one where the total CPU cycles used are highest. 
+This is called {\em Proof of Work} (PoW) because it is a witness that someone spent $2^x$ CPU cycles on average. The sole purpose of PoW is to secure the blockchain against tampering. 
+Security in our sense implies the {\em persistence} of the blockchain, i.e., the inability to an attacker to fool a node into accepting a truncated or forked copy of the `true' blockchain (i.e., with different set of transactions that either don't include the real ones or double spend them). Bitcoin uses the following measure for difficulty: if the leading number of zeros are $x$ then {\em difficulty} $=2^{x}$ and {\em target} $=2^{k-x}$. 
+If two competing blockchain are presented, honest nodes select the ones with the highest {\em cumulative difficulty}~(one where \(\sum \mbox{\textit{difficulty}} \) is the highest). 
 %Define the function $zero(b)$ to output the number of leading zeros in block $b$. 
 %Given two blockchains $B_1, B_2$, we first compute $s_1 = \sum_{b \in B_1} 2^{zeros(b)}$
 %, the ratio of the maximum number of the image of the hash can represent and the highest number forms a valid hash.
@@ -321,16 +337,19 @@ If two competing blockchain are presented, honest nodes select the ones with the
 	%\item Secure the network: Security in our sense implies the {\em persistence} of the blockchain, the inability to an attacker to truncate or fork the blockchain with different set of transactions that either don't include the real ones or double spend them. 
 %\end{enumerate}
 
-\paragraph{Difficulty Adjustment:} We mentioned that the binary representation of the hash of a block must have at least a `specified' number $x$ of leading zeros. This is formalized as: Hash$(b)\leq $ target ($=2^{k-x}$). The current target changes in accordance with how fast or how slow the blocks are accepted by the network during a time frame of 2 weeks. At this rate, there should be exactly 2016 blocks generated in two weeks. If the average over 2 weeks is more or less than 1 block every 10 minutes, the protocol will adjust the current target and attempt to bring it back. However, if the hashing power of the network increases sub-exponentially (or faster), then difficulty may never catch up and the average block time will always be less than 10 minutes (as is happening with Bitcoin). 
+\paragraph{Difficulty Adjustment:} We mentioned that the binary representation of the hash of a block must have at least a `specified' number $x$ of leading zeros. This is formalized as: Hash$(b)\leq $ target ($=2^{k-x}$). The current target changes in accordance with how fast or how slow the blocks are accepted by the network during a time frame of 2 weeks. At this rate, there should be exactly 2016 blocks generated in two weeks. If the average over 2 weeks is more or less than 1 block every 10 minutes, the protocol will adjust the current target and attempt to bring it back. However, if the hashing power of the network increases sub-exponentially (or faster), then difficulty may never catch up and the average block time will always be less than 10 minutes (as it was observed in Bitcoin during periods of exponential hashrate growth). 
 
 \paragraph{Storage Requirements:} As discussed earlier, at the minimum each node must store the unopened boxes in a UTXO database to ensure that the spender actually holds those bitcoins. Additionally, each node may store the entire blockchain starting from the genesis block to help other clients to bootstrap. 
+
+
+\knote{I do not like how the paragraph below sounds.}
 
 \paragraph{What can be pruned?} If all the closed boxes generated in a particular block have been opened, that block is not needed for validation (we need blocks to validate/proof that our UTXO database is valid). Thus we can only store the headers for those blocks.\footnote{However, in the existing protocol, we cannot prove to another node that all generated boxes in a pruned block have been used up. A proposal of {\em block-level aggregation} of transactions could allow that.} Additionally, there can be entries in UTXO that are provably unspendable (see Section~\ref{alternatives}). Even these can be pruned.
 
 \section{Block Structure} 
 
 A block consists of a variable-size {\em payload} containing the actual transactions and a fixed-size {\em header} describing the payload. 
-Earlier we stated (for simplicity) that the PoW is computed as a hash of the entire block. However, this is not true. The PoW is computed only on the header and not the payload. This enables nodes to verify PoW using just header information, while the payload can be verified later via the root hash. 
+Earlier we stated (for simplicity) that the PoW is computed as a hash of the entire block. This is not true. The PoW is computed only on the header and not the payload. This enables nodes to verify PoW using just header information, while the payload can be verified later via the root hash. 
 The header is 80 bytes and contains: 
 \begin{enumerate}
 	\item The root hash of the Merkle tree\footnote{Merkle tree is a technique for authenticating small slices (few transactions) from a large chunk of data (entire payload) without having to authenticate the entire data (however, the entire data can be authenticated if needed).} of transactions in the payload.
