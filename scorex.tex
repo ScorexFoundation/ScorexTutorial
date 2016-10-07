@@ -172,10 +172,10 @@ The newer applications of blockchain are all based on how these rules can be wri
 
 \chapter{Overview of Bitcoin}
 
-Here we attempt to give a high-level overview of Bitcoin that is sufficient to understand and implement it in Scorex. The terms we need to understand are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}.
+Here we attempt to give a high-level overview of Bitcoin that is sufficient to understand and implement it in Scorex. The terms we need to understand are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}. We will revisit these terms in next chapters providing more abstract definitions.
  
 \section{A Transaction} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds).
-Funds are exchanged between {\em addresses} which are hashes of public keys. We will sometimes use the terms `address' and `public key' interchangeably if there is no ambiguity. However, it should be remembered that addresses are one-way hashes of public keys. %Depending on the context, a symbol $A$ could refer to a public key or an address (the meaning will be clear from the usage).
+In a simplest case, funds are exchanged between {\em addresses} which are hashes of public keys. We will sometimes use the terms `address' and `public key' interchangeably if there is no ambiguity. However, it should be remembered that addresses are one-way hashes of public keys. %Depending on the context, a symbol $A$ could refer to a public key or an address (the meaning will be clear from the usage).
 The smallest unit of Bitcoins is Satoshis (1 Bitcoin $=10^8$ Satoshis), which is what we will use in our text.
 
 Suppose an address $A$ owned by Alice has $x$ Satoshis. She wants to send $y \leq x$ Satoshis to address $B$ owned by Bob.
