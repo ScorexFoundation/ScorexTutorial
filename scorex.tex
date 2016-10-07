@@ -84,9 +84,6 @@
 \date{June-August, 2016}
 \maketitle
 
-% \begin{abstract}  
-
-
 \chapter{Executive Summary}
 
 This paper describes the Scorex project and how it can be used to implement blockchain protocols~(such as Bitcoin). Scorex is a framework written in Scala with loosely coupled components. 
@@ -172,19 +169,12 @@ The newer applications of blockchain are all based on how these rules can be wri
 	
 \end{enumerate}
 }
-%\section{Other Tutorials}
-%
-%``How the Bitcoin protocol actually works'' tutorial by Michael Nielsen~\cite{nielsen} define problems led to the creation of Bitcoin and how the cryptocurrency solved them. The original Bitcoin whitepaper by Satoshi Nakamoto~\cite{Nakamoto2008} still provides very good description of basic concepts of Bitcoin. Details of Bitcoin technicalities could be found in the ``Mastering Bitcoin'' book~\cite{antonopoulos2014mastering}.
-%
 
 \chapter{Overview of Bitcoin}
 
-The article ``How the Bitcoin protocol actually works'' by Michael Nielsen~\cite{nielsen} discusses various problems that led to the creation of Bitcoin. The original whitepaper by Satoshi Nakamoto~\cite{Nakamoto2008} provides a good description on the concepts and details can be found in the book ``Mastering Bitcoin''~\cite{antonopoulos2014mastering}. 
-
 Here we attempt to give a high-level overview of Bitcoin that is sufficient to understand and implement it in Scorex. The terms we need to understand are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}.
-
  
-\section{Transactions} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds).
+\section{A Transaction} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds).
 Funds are exchanged between {\em addresses} which are hashes of public keys. We will sometimes use the terms `address' and `public key' interchangeably if there is no ambiguity. However, it should be remembered that addresses are one-way hashes of public keys. %Depending on the context, a symbol $A$ could refer to a public key or an address (the meaning will be clear from the usage).
 The smallest unit of Bitcoins is Satoshis (1 Bitcoin $=10^8$ Satoshis), which is what we will use in our text.
 
@@ -414,6 +404,11 @@ If the difficulty level is sufficiently high and the network synchronization tim
 \end{enumerate}
 
 \paragraph{Privacy:} The addresses serve as pseudonyms and provide some anonymity. However, bitcoin does not provide true anonymity because the inputs are linked to the previous outputs via a reference.
+
+\section{Further Reading}
+
+The article ``How the Bitcoin protocol actually works'' by Michael Nielsen~\cite{nielsen} discusses various problems that led to the creation of Bitcoin. The original whitepaper by Satoshi Nakamoto~\cite{Nakamoto2008} provides a good description on the concepts and details can be found in the book ``Mastering Bitcoin''~\cite{antonopoulos2014mastering}. 
+
 
 
 \chapter{A Blockchain System Design}             % chapter 2
