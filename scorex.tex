@@ -376,6 +376,9 @@ The different sections are identified by alternating underlines:
 \paragraph{Computing the Merkle root:} The transactions are first arranged in some order that satisfies the consensus rules given below. Their transaction hashes (TXIDs) are considered as the last row (leaves) of the tree that will be constructed. Starting with the last row, each row is iteratively processed to get the previous (parent) row until the currently processing row has only one node, the Merkle root. 
 If the currently processing row has two or more nodes, we first ensure that there are even number (say $n$) of them, by repeating the last node if necessary. Then we pair the nodes to form $n/2$ pairs. Each pair $(L, R)$ is concatenated and its hash $\texttt{SHA256}(\texttt{SHA256}(L||R))$ forms the parent for the next iteration. This process is repeated until the root is reached. 
 
+\knote{ Repeating last nodes is faulty, see header comments in \newline
+https://github.com/bitcoin/bitcoin/blob/d612837814020ae832499d18e6ee5eb919a87907/src/consensus/merkle.cpp \newline and corresponding CVE-2012-2459 at https://en.bitcoin.it/wiki/Common\_Vulnerabilities\_and\_Exposures. Instead, null element should be used for absent leafs. }
+
 
 \paragraph{Payload:} The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same orders as in the Merkle tree.
 
@@ -417,9 +420,9 @@ If the difficulty level is sufficiently high and the network synchronization tim
 \begin{enumerate}
 	\item {\em Reused R-values:} The underlying signatures ECDSA can be broken if the same randomness is used in two different signatures~\cite{cryptoeprint:2013:734}. Thus, implementations must take additional care to use true randomness or message-specific one (computed as a hash of the message).
 	%\item {\em Attack on cumulative difficulty:} Since the initial difficulty is small in the first two years of Bitcoin, a powerful attacker may be able to forge a chain longer than the current one  with higher cumulative difficulty. This attack becomes more difficult as the cumulative difficulty increases.
-	\item {\em Centralization of mining:} If a majority of the mining power is concentrated in a few pools, then they can collude and attack bitcoin. Part of the reason for this threat is the susceptibility to ASIC mining~\cite{Taylor:2013:BAB:2555729.2555745}.
+	\item {\em Centralization of mining:} If a majority of the mining power is concentrated in a few pools, then they can collude and attack Bitcoin. Part of the reason for this threat is the susceptibility to ASIC mining~\cite{Taylor:2013:BAB:2555729.2555745}.
 	\item {\em Denial of service attacks:} Certain attacks are based on miners forcing other miners to skip block validation by generating large blocks or ones that require expensive verification. Thus, they could send wrong data that will result in other miners to later lose their work.
-	\item {\em Malleability:} The signature encoding in Bitcoin is such that if a certain bits of the signature are toggled, the result is still a valid signature (this is due to the underlying ECDSA scheme). This allows miners to mine a transaction whose is different from the original, while keeping everything else (i.e., inputs/outputs) same. If a bitcoin service uses the transaction hash to monitor sent funds, then it could lose funds~\cite{decker2014bitcoin}.
+	\item {\em Malleability:} The signature encoding in Bitcoin is such that if a certain bits of the signature are toggled, the result is still a valid signature (this is due to the underlying ECDSA scheme). This allows miners to mine a transaction whose is different from the original, while keeping everything else (i.e., inputs/outputs) same. If a bitcoin service uses the transaction hash to monitor funds being sent, then it could lose funds~\cite{decker2014bitcoin}.
 \end{enumerate}
 
 \paragraph{Privacy:} The addresses serve as pseudonyms and provide some anonymity. However, bitcoin does not provide true anonymity because the inputs are linked to the previous outputs via a reference.
