@@ -611,6 +611,7 @@ Proof-of-Work (PoW) as a consensus protocol was used for the first time in Bitco
 However, the concept of PoW came before bitcoin in the form of Hashcash~\cite{back2002hashcash}.
 PoW forms the core of Bitcoin, Ethereum and many other cryptocurrencies. The basic idea here is to force miners to iterate over some function with a small probability of success per iteration. A successful result is giving a right to generate a block. The probability is adjusted automatically via \textit{difficulty} parameter \(D\). 
 
+\knote{In Bitcoin, we hash the whole header. Some words about nonce field are needed}
 In case of Bitcoin, the function is just a hash function. The input to the hash is the root of the Merkle tree of transaction hashes as an authenticator of the transactions included. Additionally, we also want a block to refer to a previous block, so we include the hash of the previous block. This ensures that in order to replace a particular block the attacker has to replace all its descendants. As some amount of work is needed to generate each block, the amount of work needed to defeat an honest chain increases exponentially with depth.
 
 With PoW, it is impossible to make a false claim of successful block generation. Such a claim is easily falsifiable, as calling the hash function is very cheap. Thus, PoW also offers protection against Sybil attacks where an attacker creates a large number of fake identities~\cite{douceur2002sybil}.
@@ -678,7 +679,7 @@ In additions to the systems described in this chapter as well as many other syst
 The various alternative designs are proposed to address some of the problems with Bitcoin explained below:
 \begin{enumerate}
 	\item Storage scalability: In Bitcoin, every node must store the entire blockchain (currently over 10 GB). This is a bottleneck as the blockchain becomes older. Proposals have been presented that allow pruning of the blockchain under certain assumptions. 
-	\item Memory usage: The UTXO set is something that needs to be kept in memory for fast validation. This set is currently several hundred MBs.
+	\item Memory usage: The UTXO set is something that needs to be kept in memory for fast validation. This set is currently about 1.5GB.
 	\item Rational behavior: If nodes behave rationally, they will not store the blockchain. Rather they will store only the current UTXO set (SPV nodes go even further and store only those UTXOs that they are interested in). In the long run, this could lead to {\em tragedy of the commons}, where no one has a complete copy of the blockchain.
 	\item Privacy: While Bitcoin uses pseudo-random looking addresses for privacy, some information is inherently leaked. For instance, we can know all the addresses that a given satoshi has traveled to since its creating. Additionally, we can often infer that certain addresses belong to the same entity.
 	\item Delay in confirmations: Bitcoin has an average confirmation time of 10 minutes. However, if the size of the unconfirmed transactions is higher than the maximum network throughput (1 MB/10 minutes), then a transaction can remain unconfirmed for tens of hours. Additionally, since PoW is a randomized process, there is no guarantee that a block will be mined soon, even if the transaction fee is very high.
@@ -695,7 +696,7 @@ The various alternative designs are proposed to address some of the problems wit
 \subsection{SPV}
 
 SPV (Simple Payment Verification) was a protocol proposed in the original Bitcoin paper as an alternative to the full-node protocol~\cite{Nakamoto2008}. It is designed to enable lightweight clients that can sync in minutes instead of days and store only a fraction of the information (few MBs) compared to a full node (several GBs).
-In this method, a node only verifies headers from the genesis block onwards and validates only the last few full blocks (enough for rollback). The key idea in SPV is that the security of PoWs is not measured by block height (the number of blocks since the genesis block) but rather the depth (the number of blocks mined since a particular payment has been confirmed). This allows clients be able to verify payments quickly. However, the security of SPV has not been formally proven.
+In this method, a node only verifies headers from the genesis block onwards and validates only the last few full blocks (enough for rollback).  The key idea in SPV is that the security of PoWs is not measured by block height (the number of blocks since the genesis block) but rather the depth (the number of blocks mined since a particular payment has been confirmed) \knote{???} . This allows clients be able to verify payments quickly. However, the security of SPV has not been formally proven.
 
 Implementations of SPV nodes use a protocol extension called {\em bloom filters}, described in BIP 37. They use headers for blocks prior to their wallet's birth timestamp, and request filtered blocks for the rest by sending a bloom filter to its peers. The peers then send the relevant transactions for blocks along with the Merkle paths.\footnote{http://bitcoin.stackexchange.com/a/11721/2075}
 
