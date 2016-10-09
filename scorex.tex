@@ -564,6 +564,7 @@ By including transaction root hash into the block-header it is possible to have 
 
 \subsection{Transactional Layer Generalization}
 
+\knote{Sounds unfinished, we need to say this is just about transactions and state.}
 Let us summarize the common features of various cryptocurrencies.
 
 \begin{enumerate}
@@ -587,26 +588,20 @@ Most blocks also have some authenticating value for the transactions included th
 
 We know (from proposition~\ref{prop1}) that if the same sequence of blocks is applied to the same genesis state by two nodes then they will arrive at the same minimal state. This is exactly what we want to achieve. So how we ensure that the same sequence of blocks are applied by each node? This is the consensus problem.
 
-Firstly note that we can only hope to achieve this for nodes who follow the same protocol strictly. We refer to such nodes as \textit{honest} and the method to obtain consensus as the \textit{consensus protocol}. Nodes not following the protocol are called \textit{byzantine} nodes and could be doing so if they are corrupted by an attacker or due to software bugs. 
+Firstly note that we can only hope to achieve this for nodes who follow the same protocol strictly. We refer to such nodes as \textit{honest} and the method to obtain consensus as the \textit{consensus protocol}. Nodes not following the protocol are called \textit{byzantine} nodes and could be doing so if they are corrupted by an attacker or due to software bugs, hardware crashes etc. 
 
 %[validity, agreement, termination]
 
-Computer scientists have  studied consensus protocols since early 1980s. A lot of interesting results were obtained. For example, it is impossible to achieve consensus using a deterministic procedure for a set of nodes if they are exchanging messages asynchronously and a single process could fail (Fischer-Lynch-Paterson theorem~\cite{fischer1985impossibility}). 
-Consensus in open networks with unknown number of participants is pretty new and very hard question. 
-%
-%\begin{enumerate}
-%\item{Validity}
-%\item{Agreement}
-%\item{Termination}
-%\end{enumerate}
+Computer scientists have been studying consensus protocols extensively since early 1980s. A lot of interesting results were obtained. For example, it is impossible to achieve consensus using a deterministic procedure for a set of nodes if they are exchanging messages asynchronously and a single process could fail (Fischer-Lynch-Paterson theorem~\cite{fischer1985impossibility}). 
+Randomizes consensus in open networks with unknown number of participants is pretty new and also a very hard question. 
+
 
 For blockchain consensus protocols, we can state following properties:
 
 \begin{enumerate}
 \item{Consistency (or Prefix immutability)} - for two honest nodes the probability to have different prefixes after cutting last \(k\) blocks should go down exponentially with \(k\).
-\item{Chain Quality} - a party having \(x\%\) of voting power should produce no more than \(\alpha x \%\) blocks in a long run, where \(\alpha\) is constant $\geq 1$.
+\item{Chain Quality} - a party having \(x\%\) of voting power should produce no more than \(\alpha x \%\) blocks in a long run, where \(\alpha\) $\geq 1$ is a function of \(x\).
 \item{Chain Growth} - over time, the blockchain should always grow. Thus, as long there is an honest majority in the network (in terms of computing power, not the number of nodes), a transaction sent by a honest node should eventually make it to the blockchain.
-%No one is interested in a structure that can be with possibility to stuck. 
 \end{enumerate}
 
 
