@@ -539,13 +539,15 @@ This basic design has a critical flow. If a miner processing a name-register box
 
 \subsection{Nxt and Ethereum}	
 
+\knote{Paragraph below sounds unclear}
+
 After understanding Bitcoin, you might wonder why Bitcoin has a Script-based structure instead of hard-wired semantics that validate public-key and signatures. In fact, why bother with address at all when we could simply map public keys to accounts and transactions to Satoshis transferred between the accounts?
 
 In fact, some of Bitcoin successors have adopted this approach. For example, Nxt has a dedicated notion of accounts. An account is associated with its public key. A transaction transfers tokens from one account to another and needs to be signed by the sender. For such a system, the minimal state is a table holding a correspondence between accounts and their balances.
 
-This simple example, however, has a critical flaw. Suppose Alice has 50 tokens at some time. She issues a signed transaction to pay 5 tokens to Bob. A node will find this valid, and therefore, applicable. After the application Alice has 45 tokens. However, Bob or anyone else can now {\em replay} the same transaction again and again till Alice's account is empty. Our minimal state representation seems to be flawed.
+This simple explanation, however, has a critical flaw. Suppose Alice has 50 tokens at some time. She issues a signed transaction to pay 5 tokens to Bob. A node will find this valid, and therefore, applicable. After the application Alice has 45 tokens. However, Bob or anyone else can now {\em replay} the same transaction again and again till Alice's account is empty. Our minimal state representation seems to be flawed.
 
-Ethereum solves the problem by modifying minimal state representation with a ``nonce'' value added to every account. That is, the minimal state is no longer just a (public key $\rightarrow$ balance) correspondence, but a (public key $\rightarrow$ (nonce, balance)) one. Each transaction contains some nonce value \(txnonce\) describing which box to open. A transaction is valid only if \(txnonce = nonce + 1\). After applying the transaction the old box is destroyed and a new box with the incremented nonce and update balance is created. Thus, even Etherium has the idea of immutable boxes.
+Ethereum solves the problem by modifying minimal state representation with a ``nonce'' value added to every account~(Nxt solution is different and not covered in this document). That is, the minimal state is no longer just a (public key $\rightarrow$ balance) correspondence, but a (public key $\rightarrow$ (nonce, balance)) one. Each transaction contains some nonce value \(txnonce\) describing which box to open. A transaction is valid only if \(txnonce = nonce + 1\). After applying the transaction the old box is destroyed and a new box with the incremented nonce and update balance is created. Thus, even Etherium has the idea of immutable boxes.
 %By application, \(nonce := txnonce\). 
 
 Unlike Bitcoin, Ethereum requires a strict order of transactions issued by an account. In Bitcoin, transactions could be applied in any order as long as they are spending non-overlapping sets of outputs and an input of one transaction does not spend the output of another. In Ethereum, the order is set by nonces. 
