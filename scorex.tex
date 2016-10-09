@@ -556,10 +556,10 @@ Unlike Bitcoin, Ethereum requires a strict order of transactions issued by an ac
 
 \subsection{Transactional Metadata}
 
-Suppose we have a sequence $s$ of objects serializable to byte arrays and want to \textit{authenticate} their concatenated binary representation efficiently. That is, we want to calculate a fixed-sized value (the {\em root}) from $s$ such that even a single bit change in the representation always results in a change of the root. Furthermore, we require {\em collision-resistant}. That is, it must be computationally hard to generate different sequences resulting in the same root. Any datastructure that supports this is called an {\em authenticated data structure}, an example of which is Merkle trees.
+Suppose we have a sequence $s$ of objects serializable to byte arrays and want to \textit{authenticate} their concatenated binary representation efficiently. That is, we want to calculate a fixed-sized value (the {\em root}) from $s$ such that even a single bit change in the representation always results in a change of the root. Furthermore, we require {\em collision-resistance}. That is, it must be computationally hard to generate different sequences resulting in the same root. Any data structure that supports this is called an {\em authenticated data structure}, an example of which is a Merkle tree.
 
 Along with transactions, we could put some aggregated data about them. For example, in Bitcoin, the root hash of the Merkle tree of transactions of that block is also put into the block. That way it is possible for nodes to exchange only {\em block-headers} and not the full blocks. A \textit{block-header} is a block without its transactions. 
-By including transaction root hash into the block-header, it is possible to have it spread around a network and be sure that it is impossible to show transactions other than what were included when the root was computed. 
+By including transaction root hash into the block-header it is possible to have it spread around a network and be sure that it is impossible to show transactions other than what were included when the root was computed. 
 
 
 \subsection{Transactional Layer Generalization}
