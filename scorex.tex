@@ -124,7 +124,7 @@ In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and E
 \section{Organization}
 
 
-This document is organized as follows. In Chapter~\ref{building-blocks}, we describe basic building blocks of a blockchain system. In Chapter~\ref{impl}, we describe how the blocks are implemented in the Scorex framework. We provide code snippets in Scala language. No prior knowledge of the Scala language is required.
+This document is organized as follows. In Chapter~\ref{bitcoin-intro}, we give an introduction to Bitcoin. In Chapter~\ref{blockchain-intro}, we describe basic building blocks of a blockchain system. In Chapter~\ref{impl}, we describe how the blocks are implemented in the Scorex framework. We provide code snippets in Scala language. No prior knowledge of the Scala language is required.
 
 \ignore{
 
@@ -190,7 +190,7 @@ The newer applications of blockchain are all based on how these rules can be wri
 }
 
 \chapter{Overview of Bitcoin}
-
+\label{bitcoin-intro}
 Here we attempt to give a high-level overview of Bitcoin that is sufficient to understand and implement it in Scorex. The terms we need to understand are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}. We will revisit these terms in next chapters providing more abstract definitions.
  
 \section{Transaction} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds).
@@ -431,6 +431,7 @@ The article ``How the Bitcoin protocol actually works'' by Michael Nielsen~\cite
 
 
 \chapter{A Blockchain System Design}             % chapter 2
+\label{blockchain-intro}
 \section{Introduction}     
 
 We can define a blockchain as a {\em prefix-immutable append-log of non-conflicting authenticated-events in a decentralized peer-to-peer network}. Let us elaborate what this means.
@@ -464,22 +465,22 @@ Below are the cryptographic primitives needed to construct blockchain systems de
 	\item {\em Signature scheme:} A signature schemes consists of three algorithms:
 	
 	\begin{enumerate}
-		\item  {\em KeyGen$(k)$:} This takes as input a security parameter $k$ and outputs a (public-key, private-key) pair $(pk, sk)$. 
-		\item  {\em Sign$(sk, m)$:} This takes as input a private-key $sk$ and a message $m$. It outputs a signature $s$.
-		\item  {\em Verify$(pk, m, s)$:} This takes as input a public-key $pk$, a message $m$ and a signature $s$. It outputs True or False.
+		\item  KEYGEN$(k)$: This takes as input a security parameter $k$ and outputs a (public-key, private-key) pair $(pk, sk)$. 
+		\item  SIGH$(sk, m)$: This takes as input a private-key $sk$ and a message $m$. It outputs a signature $s$.
+		\item  VERIFY$(pk, m, s)$: This takes as input a public-key $pk$, a message $m$ and a signature $s$. It outputs True or False.
 	\end{enumerate}
-	Correctness requires that for all $(pk, sk)$ pairs output from {\em KeyGen} and for all $m$, it must hold that {\em Verify}$(pk, m, ${\em Sign}$(sk, m)) = $ True.
+	Correctness requires that for all $(pk, sk)$ pairs output from KEYGEN and for all $m$, it must hold that VERIFY$(pk, m, $ SIGN$(sk, m)) = $ True.
 	
 	%valid inputs the verification process outputs true.
 	%A signature scheme is a type of public-key cryptography (i.e. based on two keys), where a private key is used to generate a {\em signature} on a message and the public key is used to {\em verify} the signature. 
 	
-	Security requires that this is the only way to generate valid signature. Formally, we define the security using a game where we give the attacker access to the signing oracle for some private key $sk$ and require him to generate a valid signature (one that verifies with $pk$) on a message that was never queried to this oracle.
+	Security requires that this is the only way to generate valid signature. Formally, we define the security using a game where we give the attacker access to SIGN oracle for some private key $sk$ and require him to generate a valid signature (one that outputs True on VERIFY with $pk$) on a message that was never queried to this oracle.
 	%should private key and the message allows creating a valid signature. The owner of a public key also cannot later deny having created the signature~\cite{schneier1996one}.
 	%We require that the attacker cannot generate valid signatures on any arbitrary message even using the signing oracle on any other arbitrary messages. 
 	This is called UF-CMA (unforgeability under adaptive chosen message attack)~\cite{schneier1996one}.
 	
-	We actually require a stronger property called {\em strong unforgeability} (SUF-CMA)~\cite{boneh2006strongly}. This requires that an attacker having access to the signing oracle for arbitrary messages cannot generate a {\em new} signature on a message whose signature has already been queried. Unfortunately, the signatures used in Bitcoin do not satisfy SUF-CMA (they do satisfy UF-CMA though). This has led to the {\em malleability} problem in Bitcoin.
-	\item {\em Commitments:} Some proposals (such as ZeroCash~\cite{sasson2014zerocash}) use commitments. A commitment scheme allows a user, say Alice, to commit to a message $m$ without revealing  it. Instead she sends a commitment $c =$ COMM$_r(m)$, where $r$ is a random value. Later on, she can open her commitment by revealing $(r, m)$. A verifier then computes VERIFY$(c, m, r )$ and outputs either True or False. For correctness, we require that for all $(r, m)$, it must hold that VERIFY$($COMM$_r(m), m, r) =$ True.
+	We actually require a stronger property called {\em strong unforgeability} (SUF-CMA)~\cite{boneh2006strongly}. This requires that an attacker having access to a SIGN oracle for arbitrary messages cannot generate a {\em new} signature on a message whose signature has already been queried. Unfortunately, the signatures used in Bitcoin do not satisfy SUF-CMA (they do satisfy UF-CMA though). This has led to the {\em malleability} problem in Bitcoin.
+	\item {\em Commitments:} Some proposals (such as ZeroCash~\cite{sasson2014zerocash}) use commitments, which allow a user, say Alice, to commit to a message $m$ without revealing  it. Instead she sends a commitment $c =$ COMM$(m, r)$, where $r$ is a random value. Later on, she can `open' her commitment by revealing $(m, r)$. A verifier then computes VERIFY$(c, m, r )$ and outputs either True or False. For correctness, we require that for all $(r, m)$, it must hold that VERIFY$($COMM$(m, r), m, r) =$ True.
 	
 	Commitments can be either: (1) {\em computationally binding}
 	(so that Alice can cheat and present a different $m'$ if she has a large (but impractical) amount of computing power) and {\em perfectly hiding} (the commitment reveals no information about $m$ even to someone with infinite computing power), or: (2) {\em perfectly binding} (Alice cannot cheat even if she has infinite computing power) and {\em computationally hiding} (someone with very large but finite computing power can learn $m$) opening~\cite{damgaard1999commitment}. A commitment scheme cannot be both perfectly hiding and perfectly binding.
@@ -584,6 +585,7 @@ By including transaction root hash into the block-header it is possible to have 
 \subsection{Transactional Layer Generalization}
 
 \knote{Sounds unfinished, we need to say this is just about transactions and state.}
+
 Let us summarize the common features of various cryptocurrencies.
 
 \begin{enumerate}
@@ -612,7 +614,7 @@ Firstly note that we can only hope to achieve this for nodes who follow the same
 %[validity, agreement, termination]
 
 Computer scientists have been studying consensus protocols extensively since early 1980s. A lot of interesting results were obtained. For example, it is impossible to achieve consensus using a deterministic procedure for a set of nodes if they are exchanging messages asynchronously and a single process could fail (Fischer-Lynch-Paterson theorem~\cite{fischer1985impossibility}). 
-Randomizes consensus in open networks with unknown number of participants is pretty new and also a very hard question. 
+Randomized consensus in open networks with unknown number of participants is a hard problem. %pretty new and also a very hard question. 
 
 
 For blockchain consensus protocols, we can state following properties:
@@ -715,17 +717,18 @@ The various alternative designs are proposed to address some of the problems wit
 \subsection{SPV}
 
 SPV (Simple Payment Verification) was a protocol proposed in the original Bitcoin paper as an alternative to the full-node protocol~\cite{Nakamoto2008}. It is designed to enable lightweight clients that can sync in minutes instead of days and store only a fraction of the information (few MBs) compared to a full node (several GBs).
+%However, the security of SPV has not been formally proven. 
 In this method, a node only verifies headers from the genesis block onwards and validates only the last few full blocks (enough for rollback). 
-The key idea in SPV is that the security is not measured by a block's height (the number of blocks before it since the genesis block) but rather its depth (the number of blocks mined after it) \knote{???}. However, the security of SPV has not been formally proven.
+The key idea in SPV is that the security is not measured by a block's height (the number of blocks before it since the genesis block) but rather its depth (the number of blocks mined after it) \knote{???}. 
 
-Implementations of SPV nodes use a protocol extension called {\em Bloom filters}, described in BIP 37. They use headers for blocks prior to their wallet's birth timestamp, and request filtered blocks for the rest by sending a bloom filter to its peers. The peers then send the relevant transactions for blocks along with the Merkle paths.\footnote{http://bitcoin.stackexchange.com/a/11721/2075}
+Implementations of SPV nodes use a protocol extension called {\em Bloom filters}, described in Bitcoin Improvement Proposal (BIP) \#37. They use headers for blocks prior to their wallet's birth timestamp, and request filtered blocks for the rest by sending a bloom filter to its peers. The peers then send the relevant transactions for blocks along with the Merkle paths.\footnote{http://bitcoin.stackexchange.com/a/11721/2075}
 
 \subsection{Rollerchain}
 
 Rollerchain~\cite{DBLP:journals/corr/ChepurnoyLO16} (RC) is a proposal aimed to (1) reduce storage and (2) enforce nodes to store blocks and prevent tragedy of the commons. RC stores data only for verifying recent $k$ iterations for some security parameter $k$. This is similar to SPV mode, where the nodes additionally store the last $k$ blocks. However, rational nodes in RC are {\em enforced} to store the entire sequence of blocks for a certain depth $\leq k$ determined solely from the public key. To create a successful PoW, nodes must additionally prove storage of one or more snapshots (i.e., minimal states) determined via a hash of their public key and the current block index. Since the index changes with each block, there is a {\em sliding window} of snapshots from which a node must store a few. The index of stored snapshots also slides with the window and nodes must recompute this at every new block. Consequently, nodes are implicitly forced to store all the blocks till the depth of their earliest snapshot.
 In RC, the block header contains a Merkle root hash of the minimal state that will be obtained after the block is applied. Additionally, the Merkle root hash of the transactions and a Proof of Storage of snapshots is also present in the header. 
 
-[Not very clear how the Proof of storage works -- Alex, please add some text?]
+\anote{Not very clear to me how the Proof of storage works -- Alex, please add some text.}
 
 
 \subsection{GHOST}
@@ -819,6 +822,8 @@ Some of the alternate blockchain designs we described were:
 %
 
 \chapter{Scorex}           % chapter 2
+\label{impl}
+
 \section{Introduction}     % section 2.1
 
 Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code. What do you need to do in order to build something on Scorex is to provide implementations for all the abstract interfaces~(possibly reusing code previously written for our projects).
@@ -840,15 +845,18 @@ Scala is functional, modular and also object-oriented language. There are severa
 
 \subsection{Propositions and Proofs}
 
-In the first place, we are getting into a mechanism to protect binary objects, e.g. transaction outputs, from non-permissioned access. We protect an object with a \textit{proposition}. Then in order to make an action with an object it is needed to provide a \textit{proof} for its proposition. 
+Blockchain can be thought of a mechanism to control access to some protected objects (such as transaction outputs). An object is protected by a {\em proposition} and a {\em proof} for that proposition is needed in order to modify the object.
 
-Proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as:
+%In the first place, we are getting into a mechanism to protect binary objects, e.g. transaction outputs, from non-permissioned access. We protect an object with a \textit{proposition}. Then in order to make an action with an object it is needed to provide a \textit{proof} for its proposition. 
 
+A proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as:
+
+\small{
 \begin{lstlisting}
 trait Proposition extends BytesSerializable
 \end{lstlisting}
-
-In most cases, a proposition claims proof of knowledge of a secret to be provided in a non-interactive zero-knowledge form. For example, in most of popular signature schemes a digital signature is a non-interactive zero-knowledge proof of a private key knowledge. Scorex has a basic entity for that
+}
+In most cases, a proposition requires a proof of knowledge of a secret to be provided in a non-interactive zero-knowledge form. For example, in most of popular signature schemes a digital signature is a non-interactive zero-knowledge proof of a private key knowledge. Scorex has a basic entity for that
 
 \begin{lstlisting}
 trait ProofOfKnowledgeProposition[S <: Secret] extends Proposition
