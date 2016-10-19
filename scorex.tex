@@ -191,23 +191,26 @@ The newer applications of blockchain are all based on how these rules can be wri
 
 \chapter{Overview of Bitcoin}
 \label{bitcoin-intro}
-Here we attempt to give a high-level overview of Bitcoin that is sufficient to understand and implement it in Scorex. The terms we need to understand are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}. We will revisit these terms in next chapters providing more abstract definitions.
+Here we attempt to give a high-level overview of Bitcoin. Some of the terms we will discuss are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}. We will revisit these terms in next chapters providing more abstract definitions.
+
+In most cases of Bitcoin, funds are exchanged between {\em addresses} which are hashes of public keys. We will sometimes use the terms `address' and `public key' interchangeably. However, it should be remembered that addresses are one-way hashes of public keys. 
  
-\section{Transaction} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds).
-In a simplest case, funds are exchanged between {\em addresses} which are hashes of public keys. We will sometimes use the terms `address' and `public key' interchangeably. However, it should be remembered that addresses are one-way hashes of public keys. %Depending on the context, a symbol $A$ could refer to a public key or an address (the meaning will be clear from the usage).
+\section{Transaction} A transaction is a string sent over the peer-to-peer network that results in funds being transferred from one or more addresses to other addresses.
+A transaction consists of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds).
+%Depending on the context, a symbol $A$ could refer to a public key or an address (the meaning will be clear from the usage).
 The smallest unit of Bitcoin is Satoshi (1 Bitcoin $=10^8$ Satoshis), which is what we will use in our text.
 
-Suppose an address $A$ owned by Alice has $x$ Satoshis. She wants to send $y \leq x$ Satoshis to address $B$ owned by Bob.
+Suppose an address $A$ owned by Alice has $x$ Satoshis. Alice wants to send $y \leq x$ Satoshis to address $B$ owned by Bob.
 This can be done by creating a transaction with $A$ as the input and $B$ as one of the outputs.
 The transaction additionally has information for other nodes to quickly validate that $A$ indeed has $x$ Satoshis to spend.
 This is done by adding a reference to some previous transaction's output where $A$ actually received those $x$ Satoshis. Let us call this $ref_{A \leftarrow x}$.
-The outputs are constructed as follows: The first output sends $y$ bitcoins to $B$. Alice then sets a transaction fee $t$ and adds a second output sending the remaining $z = x-y-t$ Satoshis to her {\em change address} $C$. The change address is simply any address owned by Alice and could also be $A$.
+The outputs are constructed as follows: The first output sends $y$ Satoshis to $B$. Alice then sets a transaction fee $t$ and adds a second output sending the remaining $z = x-y-t$ Satoshis to her {\em change address} $C$. The change address is simply any address owned by Alice and could also be $A$.
 
 The message $\mbox{``{($ref_{A\leftarrow  x}$, take $x$ from $A$), (put $y$ in $B$), (put $z$ in $C$)}''}$ together with its signature under $A$ is considered a `transaction'.
 %The above transaction assigns $\btc y$ from Alice's public key $A$ to Bob's public key $B$. 
 %For the transaction to be valid, it must hold that $x \geq y+z$. (In general there can be several outputs as long as the sum of outputs is less than or equal to the input.) The transaction additionally has a verification condition which must pass for the funds to unlocked by $B$. Without loss of generality, we assume that the verification condition is ``Any funds leaving $B$ must be signed under $B$.'' More complex conditions can be inserted here. 
 
-\paragraph{Notation:} We will use the following shorthand notation:
+Let us define the following notation:
 \begin{itemize}
 	\item $ref_{X \leftarrow x}$ is the message ``($ref_{X \leftarrow x}$, take $x$ from $X$)''. This is an input.
 \item
@@ -586,7 +589,7 @@ By including transaction root hash into the block-header it is possible to have 
 
 \knote{Sounds unfinished, we need to say this is just about transactions and state.}
 
-Let us summarize the common features of various cryptocurrencies.
+Let us summarize the common features of various blockchains. At the core is a {\em minimal state} that encodes some shared information between nodes. The minimal state is modified via {\em transactions}, which contain instructions for modifying the minimal state. This idea is broken down into several components as follows:
 
 \begin{enumerate}
 \item{\textbf{A Proposition and A Proof.}}
