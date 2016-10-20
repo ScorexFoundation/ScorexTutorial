@@ -14,6 +14,7 @@
 \newtheorem{axiom}{Axiom}
 
 \newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
 
 \def\shownotes{1}
 \def\notesinmargins{0}
@@ -123,7 +124,7 @@ In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and E
 \section{Organization}
 
 
-This document is organized as follows. In Chapter~\ref{building-blocks}, we describe basic building blocks of a blockchain system. In Chapter~\ref{impl}, we describe how the blocks are implemented in the Scorex framework. We provide code snippets in Scala language. No prior knowledge of the Scala language is required.
+This document is organized as follows. In Chapter~\ref{bitcoin-intro}, we give an introduction to Bitcoin. In Chapter~\ref{blockchain-intro}, we describe basic building blocks of a blockchain system. In Chapter~\ref{impl}, we describe how the blocks are implemented in the Scorex framework. We provide code snippets in Scala language. No prior knowledge of the Scala language is required.
 
 \ignore{
 
@@ -189,24 +190,27 @@ The newer applications of blockchain are all based on how these rules can be wri
 }
 
 \chapter{Overview of Bitcoin}
+\label{bitcoin-intro}
+Here we attempt to give a high-level overview of Bitcoin. Some of the terms we will discuss are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}. We will revisit these terms in next chapters providing more abstract definitions.
 
-Here we attempt to give a high-level overview of Bitcoin that is sufficient to understand and implement it in Scorex. The terms we need to understand are: {\em transaction}, {\em input}, {\em output}, {\em reference}, {\em block} and {\em confirmation}. We will revisit these terms in next chapters providing more abstract definitions.
+In most cases of Bitcoin, funds are exchanged between {\em addresses} which are hashes of public keys. We will sometimes use the terms `address' and `public key' interchangeably. However, it should be remembered that addresses are one-way hashes of public keys. 
  
-\section{A Transaction} Roughly speaking, a transaction consists of a set of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds).
-In a simplest case, funds are exchanged between {\em addresses} which are hashes of public keys. We will sometimes use the terms `address' and `public key' interchangeably if there is no ambiguity. However, it should be remembered that addresses are one-way hashes of public keys. %Depending on the context, a symbol $A$ could refer to a public key or an address (the meaning will be clear from the usage).
-The smallest unit of Bitcoins is Satoshis (1 Bitcoin $=10^8$ Satoshis), which is what we will use in our text.
+\section{Transaction} A transaction is a string sent over the peer-to-peer network that results in funds being transferred from one or more addresses to other addresses.
+A transaction consists of \emph{inputs} (source of funds) and \emph{outputs} (destination of funds).
+%Depending on the context, a symbol $A$ could refer to a public key or an address (the meaning will be clear from the usage).
+The smallest unit of Bitcoin is Satoshi (1 Bitcoin $=10^8$ Satoshis), which is what we will use in our text.
 
-Suppose an address $A$ owned by Alice has $x$ Satoshis. She wants to send $y \leq x$ Satoshis to address $B$ owned by Bob.
+Suppose an address $A$ owned by Alice has $x$ Satoshis. Alice wants to send $y \leq x$ Satoshis to address $B$ owned by Bob.
 This can be done by creating a transaction with $A$ as the input and $B$ as one of the outputs.
 The transaction additionally has information for other nodes to quickly validate that $A$ indeed has $x$ Satoshis to spend.
 This is done by adding a reference to some previous transaction's output where $A$ actually received those $x$ Satoshis. Let us call this $ref_{A \leftarrow x}$.
-The outputs are constructed as follows: The first output sends $y$ bitcoins to $B$. Alice then sets a transaction fee $t$ and adds a second output sending the remaining $z = x-y-t$ Satoshis to her {\em change address} $C$. The change address is simply any address owned by Alice and could also be $A$.
+The outputs are constructed as follows: The first output sends $y$ Satoshis to $B$. Alice then sets a transaction fee $t$ and adds a second output sending the remaining $z = x-y-t$ Satoshis to her {\em change address} $C$. The change address is simply any address owned by Alice and could also be $A$.
 
 The message $\mbox{``{($ref_{A\leftarrow  x}$, take $x$ from $A$), (put $y$ in $B$), (put $z$ in $C$)}''}$ together with its signature under $A$ is considered a `transaction'.
 %The above transaction assigns $\btc y$ from Alice's public key $A$ to Bob's public key $B$. 
 %For the transaction to be valid, it must hold that $x \geq y+z$. (In general there can be several outputs as long as the sum of outputs is less than or equal to the input.) The transaction additionally has a verification condition which must pass for the funds to unlocked by $B$. Without loss of generality, we assume that the verification condition is ``Any funds leaving $B$ must be signed under $B$.'' More complex conditions can be inserted here. 
 
-\paragraph{Notation:} We will use the following shorthand notation:
+Let us define the following notation:
 \begin{itemize}
 	\item $ref_{X \leftarrow x}$ is the message ``($ref_{X \leftarrow x}$, take $x$ from $X$)''. This is an input.
 \item
@@ -221,7 +225,10 @@ Alice's transaction is then $(m, \sigma_A(m))$, where $m  =  (ref_{A \leftarrow 
 %\paragraph{Bitcoin protocol:} Here we give the bitcoin protocol (with some simplifications). This is Version  0.
  
  
-\paragraph{Transactions:} A transaction can have several inputs and outputs. The only restriction is that the total amount of funds destroyed (via the inputs) must be $\geq$ the total amount of funds created (via the outputs). Any difference is considered a transaction fee. More formally, define $m$ to be the message
+A transaction can have several inputs and outputs. The only restriction is that the total amount of funds destroyed (via the inputs) must be greater than or equal to the total amount of funds created (via the outputs). Any difference is considered a {\em transaction fee}.\footnote{Transaction fee is collected by someone who confirms the transaction and is used both as an incentive for participation and a deterrent for spam attacks.} More formally:
+
+\begin{definition}
+Define $m$ to be the message
 \[
 M \defined (ref_{A_1\leftarrow x_1}, ref_{A_2\leftarrow x_2}, \ldots, ref_{A_n\leftarrow x_n}, B_1\la y_1,
 B_2\la y_2, \ldots, B_l\la y_l), 
@@ -236,7 +243,7 @@ A valid transaction $tx$ is a tuple:
 	\item $\sum_{i=1}^{l}y_i \leq \sum_{i=1}^{n}x_i$ 
 	\item Each $ref_{A_i \leftarrow x_i}$ for $1\leq i\leq n$ was never used in any prior transaction.
 \end{enumerate}
-
+\end{definition}
 
 \paragraph{Referencing outputs:} In future, when spending the funds from any of the outputs (say $B_i \la y_i$) of the above transaction, a reference $ref_{B_i \leftarrow y_i}$ to that output needs to be provided. %This reference is computed as follows. 
 Let $tx$ be the string of Eqn.~\ref{tx0}. Then: \[ref_{B_i \leftarrow y_i}\defined (Hash(tx), i)\]
@@ -245,13 +252,13 @@ The ordering of the signatures in $tx$ is determined from the ordering of messag
 
 To prevent double spending, Bitcoin requires that a reference should be used in a transaction at most once. This is enforced as follows.
 An unused reference is also called an unspent output (UTXO for short). Each client maintains a set of UTXOs.
-Each output of every transaction is added to this set, and removed when is it used as a reference in another transaction.
+Each output of every transaction is added to this set, and removed when it is used as a reference in another transaction.
 A transaction with a reference not in this list is not processed.
 
 \section{Validating Transactions}
 
 
-A new transaction is valid if all the references are unused. If so, the transaction is accepted as {\em valid} but {\em unconfirmed}, and is relayed on the network. The clients add each such transaction to a pool of unconfirmed transactions. Unconfirmed transactions can be double-spent. Here we describe the validation process in more detail.
+A new transaction is valid if all the references are unused. If so, the transaction is accepted as {\em valid} but {\em unconfirmed}, and is relayed on the network. The clients add each such transaction to their (private) pool of unconfirmed transactions. Unconfirmed transactions can be double-spent. Here we describe the validation process in more detail.
 Recall that a transaction is equivalent to 
 $$tx\defined (M, \sigma_{A_1}(M), \sigma_{A_2}(M), \ldots, \sigma_{A_n}(M)),$$ 
 
@@ -262,7 +269,7 @@ B_2\la y_2, \ldots, B_l\la y_l).
 \] 
 
 The values $A_i$ and $x_i$ are obtained from a {\em UTXO database} that every client must maintain.\footnote{The inputs additionally include the public key corresponding to address $A_i$. We can assume that this key is part of the signature.} 
-This database is a key-value store of type $ref_{A_i \leftarrow x_i} \ra (A_i, x_i)$. Note that in order to validate transactions and participate in the protocol, maintaining this UTXO database is necessary. Once a node has bootstrapped and synced, it need not store the entire blockchain. It can store just the UTXO database (plus a few recent blocks to handle rollbacks), and keep updating this database as new blocks are mined. Thus, even if a node is not storing blocks, it must still parse every new block to update its UTXO database. Observe that a node that does not store blocks cannot help new nodes to bootstrap.
+This database is a key-value store of type $ref_{A_i \leftarrow x_i} \ra (A_i, x_i)$. Note that in order to validate transactions and participate in the protocol, maintaining this UTXO database is necessary. Once a node has bootstrapped and downloaded some length of the blockchain, it can quietly discard those downloaded blocks once its UTXO database resulting from those blocks has been generated (it could store a few recent blocks to handle rollbacks). It can keep updating this database as new blocks are received. Thus, even if a node is not storing blocks, it must still parse every new block to update its UTXO database. Observe that a node that does not store blocks cannot help new nodes to bootstrap.
 
 
 It is helpful to consider each (unused) $ref_{A_i \lea x_i}$
@@ -299,19 +306,18 @@ A node validates a transaction by validating every input as follows:
 \end{enumerate}
 
 The opened and created boxes are not immediately committed to the UTXO database. Rather, every node must wait for the network to ``confirm'' the changes implied by any given transaction.  
-Transactions are confirmed in bulk such that all nodes quickly reach a consensus on which set of transactions to include in the next database update. 
-To ensure consistency and fast consensus, not everyone gets to choose which transactions to commit but only those nodes who have a large amount of computing resources (called ``miners'' or ``leaders'').
-
+Transactions are confirmed in batches such that all nodes quickly reach a consensus on which set of transactions to include in the next database update. 
+To ensure consistency and fast consensus, only someone who has invested a large amount of CPU cycles get to select which set of transactions to commit in the next batch. This node is called a {\em leader} or {\em miner} and is selected at each update. 
  
 \section{Confirming Transactions}
 \label{sec:verify}
 Miners are nodes that propose a set of transactions to commit along with a proof that they have put in a certain minimum amount of work (in the form of CPU cycles) after the last update. The network selects the first solution. 
 
-Roughly, the process of confirming transactions works as follows. First the miner constructs a `block' $b$, a sequence of bytes containing the following data:
+A miner confirms transactions as follows. First the miner constructs a block $b$ as a sequence of bytes containing the following data:
 \begin{enumerate}
-	\item A bunch of unconfirmed transactions along with one reward transaction %\footnote{The reward transaction has no inputs. It takes the fees and the block reward.} 
+	\item A number of unconfirmed transactions along with one reward transaction %\footnote{The reward transaction has no inputs. It takes the fees and the block reward.} 
 	(known as the \emph{coinbase transaction}).
-	\item Hash of the previous block $h_{pr}$  and a nonce. %(version, etc) %. , computed incremented from the last block and the SHA256 hash of the last block is added to the block.
+	\item Hash value of the previous block $h_{pr}$  and a nonce. %(version, etc) %. , computed incremented from the last block and the SHA256 hash of the last block is added to the block.
 	%\item A nonce is added to the block.
 	%\item
 \end{enumerate}
@@ -322,11 +328,11 @@ Roughly, the process of confirming transactions works as follows. First the mine
 
 \paragraph{Transaction pool management:} Each client maintains a pool of unverified (but valid) transactions. An element is removed from this pool when that transaction gets included in a mined block. This ensures that even if a transaction is not included in an immediate block, it is kept in the pool until it gets mined. If a transaction is not confirmed within 72 hours then it forgotten. 
 
-\paragraph{Proof of Work:} Recall that we consider a block to be mined only if its hash contained at least a `specified' number of leading zeros. Assuming that the hash function behaves like a random oracle, the probability of a random image of $k$ bits having $x$ leading zeros is about $2^{-x}$ and the only way to obtain such a value is to try hashing around $2^x$ different blocks.
+\paragraph{Proof of Work:} Recall that we consider a block to be mined only if its hash value contained at least a `specified' number of leading zeros. Assuming that the hash function behaves like a random oracle, the probability of a random image of $k$ bits having $x$ leading zeros is about $2^{-x}$ and the only way to obtain such a value is to try hashing around $2^x$ different blocks.
 
 This is called {\em Proof of Work} (PoW) because it is a witness that someone spent $2^x$ CPU cycles on average. The sole purpose of PoW is to secure the blockchain against tampering. 
 Security in our sense implies the {\em persistence} of the blockchain, i.e., the inability to an attacker to fool a node into accepting a truncated or forked copy of the `true' blockchain (i.e., with different set of transactions that either don't include the real ones or double spend them). Bitcoin uses the following measure for difficulty: if the leading number of zeros are $x$ then {\em difficulty} $=2^{x}$ and {\em target} $=2^{k-x}$. 
-If two competing blockchain are presented, honest nodes select the ones with the highest {\em cumulative difficulty}~(one where \(\sum \mbox{\textit{difficulty}} \) is the highest). 
+If two competing blockchain are presented, honest nodes select the ones with the highest {\em cumulative difficulty}~(one where the summation of difficulties is the largest). 
 %Define the function $zero(b)$ to output the number of leading zeros in block $b$. 
 %Given two blockchains $B_1, B_2$, we first compute $s_1 = \sum_{b \in B_1} 2^{zeros(b)}$
 %, the ratio of the maximum number of the image of the hash can represent and the highest number forms a valid hash.
@@ -342,11 +348,6 @@ If two competing blockchain are presented, honest nodes select the ones with the
 \paragraph{Difficulty Adjustment:} We mentioned that the binary representation of the hash of a block must have at least a `specified' number $x$ of leading zeros. This is formalized as: Hash$(b)\leq $ target ($=2^{k-x}$). The current target changes in accordance with how fast or how slow the blocks are accepted by the network during a time frame of 2 weeks. At this rate, there should be exactly 2016 blocks generated in two weeks. If the average over 2 weeks is more or less than 1 block every 10 minutes, the protocol will adjust the current target and attempt to bring it back. However, if the hashing power of the network increases sub-exponentially (or faster), then difficulty may never catch up and the average block time will always be less than 10 minutes (as it was observed in Bitcoin during periods of exponential hashrate growth). 
 
 \paragraph{Storage Requirements:} As discussed earlier, at the minimum each node must store the unopened boxes in a UTXO database to ensure that the spender actually holds those bitcoins. Additionally, each node may store the entire blockchain starting from the genesis block to help other clients to bootstrap. 
-
-
-\knote{I do not like how the paragraph below sounds.}
-
-\paragraph{What can be pruned?} If all the closed boxes generated in a particular block have been opened, that block is not needed for validation (we need blocks to validate/proof that our UTXO database is valid). Thus we can only store the headers for those blocks.\footnote{However, in the existing protocol, we cannot prove to another node that all generated boxes in a pruned block have been used up. A proposal of {\em block-level aggregation} of transactions could allow that.} Additionally, there can be entries in UTXO that are provably unspendable (see Section~\ref{alternatives}). Even these can be pruned.
 
 \section{Block Structure} 
 
@@ -376,10 +377,7 @@ The different sections are identified by alternating underlines:
 \end{enumerate}
 	
 \paragraph{Computing the Merkle root:} The transactions are first arranged in some order that satisfies the consensus rules given below. Their transaction hashes (TXIDs) are considered as the last row (leaves) of the tree that will be constructed. Starting with the last row, each row is iteratively processed to get the previous (parent) row until the currently processing row has only one node, the Merkle root. 
-If the currently processing row has two or more nodes, we first ensure that there are even number (say $n$) of them, by repeating the last node if necessary. Then we pair the nodes to form $n/2$ pairs. Each pair $(L, R)$ is concatenated and its hash $\texttt{SHA256}(\texttt{SHA256}(L||R))$ forms the parent for the next iteration. This process is repeated until the root is reached. 
-
-\knote{ Repeating last nodes is faulty, see header comments in \newline
-https://github.com/bitcoin/bitcoin/blob/d612837814020ae832499d18e6ee5eb919a87907/src/consensus/merkle.cpp \newline and corresponding CVE-2012-2459 at https://en.bitcoin.it/wiki/Common\_Vulnerabilities\_and\_Exposures. Instead, null element should be used for absent leafs. }
+If the currently processing row has two or more nodes, we first ensure that there are even number (say $n$) of them, by adding a null element if necessary. Then we pair the nodes to form $n/2$ pairs. Each pair $(L, R)$ is concatenated and its hash $\texttt{SHA256}(\texttt{SHA256}(L||R))$ forms the parent for the next iteration. This process is repeated until the root is reached. 
 
 
 \paragraph{Payload:} The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same orders as in the Merkle tree.
@@ -436,6 +434,7 @@ The article ``How the Bitcoin protocol actually works'' by Michael Nielsen~\cite
 
 
 \chapter{A Blockchain System Design}             % chapter 2
+\label{blockchain-intro}
 \section{Introduction}     
 
 We can define a blockchain as a {\em prefix-immutable append-log of non-conflicting authenticated-events in a decentralized peer-to-peer network}. Let us elaborate what this means.
@@ -457,17 +456,41 @@ Such double spends are prevented using the prefix-immutable database because the
 %Correctness is trivially guaranteed because if all parties behave correctly, then the protocol indeed behaves as expected [...]. For soundness
 \section{Cryptography}
 
-At the minimum, Bitcoin requires the following cryptographic primitives:
+\anote{will be improving this section as per Mario's comments}
+
+Below are the cryptographic primitives needed to construct blockchain systems described in this chapter.
+%At the minimum, Bitcoin requires the following cryptographic primitives:
 \begin{enumerate}
-	\item {\em One-way hash functions:} A one-way function is easy to compute in the forward direction but difficult to reverse. A hash function maps arbitrary sized strings to fixed size ones. We require the hash to be {\em collision resistance} (hard to find two arbitrary preimages with same hash) and {\em preimage resistance} (given hash, find any preimage)~\cite{schneier1996one}. For a good hash function there is no better way to break it than by brute force. By breaking, we imply finding a preimage satisfying certain predicate on the output.
-	\item {\em Signature scheme:} A signature scheme is a type of public-key cryptography (i.e. based on two keys), where a private key is used to generate a {\em signature} on a message and the public key is used to verify the signature. Only knowledge of private key and the message allows creating a valid signature. The owner of a public key also cannot later deny having created the signature~\cite{schneier1996one}.
-	We require that the attacker cannot generate valid signatures on any arbitrary message even using the signing oracle on any other arbitrary messages. This is called UF-CMA (unforgeability under adaptive chosen message attack)~\cite{schneier1996one}.
+	\item {\em One-Way Hash (OWH) functions:} A {\em One-Way Function} is easy to compute in the forward direction but difficult in the reverse. A {\em Hash Function} maps arbitrary sized strings to fixed size ones. Thus, a One-Way Hash (OWH) function efficiently maps arbitrary size strings to fixed sizes and is hard to reverse. Let there be an efficiently computable mappng $H:\{0,1\}^*\mapsto \{0,1\}^k$. 
+	We say $H$ is a OWF if it is hard for any Poly-time attacker to compute two distinct values $x, y$ such that $H(x)=H(y)$. This property, {\em collision resistance}, also implies {\em pre-image resistance}, the inability of an attacker to compute any pre-image $x$ given $H(x)$.
 	
-	We actually require a stronger property called {\em strong unforgeability} (SUF-CMA)~\cite{boneh2006strongly}. This requires that an attacker having access to the signing oracle for arbitrary messages cannot generate a {\em new} signature on a message whose signature has already been queried. Unfortunately, the signatures used in Bitcoin do not satisfy SUF-CMA (they do satisfy UF-CMA though). This has led to the {\em malleability} problem in Bitcoin.
-	\item {\em Commitments:} Some proposals (such as ZeroCash~\cite{sasson2014zerocash}) use commitments. A commitment scheme allows a user, say Alice, to commit to a message $m$ without revealing  it. Instead she sends a commitment COMM$_r(m)$, where $r$ is a random value. Later on, she can open her commitment to reveal $m$.
+	%We say that require the hash to be {\em collision resistance} (hard to find two arbitrary preimages with same hash) and {\em preimage resistance} (given hash, find any preimage)~\cite{schneier1996one}. For a good hash function there is no better way to break it than by brute force. By breaking, we imply finding a preimage satisfying certain predicate on the output.
+	\item {\em Signature scheme:} A signature schemes consists of three algorithms:
+	
+	\begin{enumerate}
+		\item  KEYGEN$(k)$: This takes as input a security parameter $k$ and outputs a (public-key, private-key) pair $(pk, sk)$. 
+		\item  SIGH$(sk, m)$: This takes as input a private-key $sk$ and a message $m$. It outputs a signature $s$.
+		\item  VERIFY$(pk, m, s)$: This takes as input a public-key $pk$, a message $m$ and a signature $s$. It outputs True or False.
+	\end{enumerate}
+	Correctness requires that for all $(pk, sk)$ pairs output from KEYGEN and for all $m$, it must hold that VERIFY$(pk, m, $ SIGN$(sk, m)) = $ True.
+	
+	%valid inputs the verification process outputs true.
+	%A signature scheme is a type of public-key cryptography (i.e. based on two keys), where a private key is used to generate a {\em signature} on a message and the public key is used to {\em verify} the signature. 
+	
+	Security requires that this is the only way to generate valid signature. Formally, we define the security using a game where we give the attacker access to SIGN oracle for some private key $sk$ and require him to generate a valid signature (one that outputs True on VERIFY with $pk$) on a message that was never queried to this oracle.
+	%should private key and the message allows creating a valid signature. The owner of a public key also cannot later deny having created the signature~\cite{schneier1996one}.
+	%We require that the attacker cannot generate valid signatures on any arbitrary message even using the signing oracle on any other arbitrary messages. 
+	This is called UF-CMA (unforgeability under adaptive chosen message attack)~\cite{schneier1996one}.
+	
+	We actually require a stronger property called {\em strong unforgeability} (SUF-CMA)~\cite{boneh2006strongly}. This requires that an attacker having access to a SIGN oracle for arbitrary messages cannot generate a {\em new} signature on a message whose signature has already been queried. Unfortunately, the signatures used in Bitcoin do not satisfy SUF-CMA (they do satisfy UF-CMA though). This has led to the {\em malleability} problem in Bitcoin.
+	\item {\em Commitments:} Some proposals (such as ZeroCash~\cite{sasson2014zerocash}) use commitments, which allow a user, say Alice, to commit to a message $m$ without revealing  it. Instead she sends a commitment $c =$ COMM$(m, r)$, where $r$ is a random value. Later on, she can `open' her commitment by revealing $(m, r)$. A verifier then computes VERIFY$(c, m, r )$ and outputs either True or False. For correctness, we require that for all $(r, m)$, it must hold that VERIFY$($COMM$(m, r), m, r) =$ True.
 	
 	Commitments can be either: (1) {\em computationally binding}
 	(so that Alice can cheat and present a different $m'$ if she has a large (but impractical) amount of computing power) and {\em perfectly hiding} (the commitment reveals no information about $m$ even to someone with infinite computing power), or: (2) {\em perfectly binding} (Alice cannot cheat even if she has infinite computing power) and {\em computationally hiding} (someone with very large but finite computing power can learn $m$) opening~\cite{damgaard1999commitment}. A commitment scheme cannot be both perfectly hiding and perfectly binding.
+	
+	\item {\em Non-Interactive Zero-Knowledge (NIZK) Proofs:} Let $N$ be an instance of any NP problem, such as finding the factors of a large integer. Let $P$ be a witness to this problem that Alice knows. 
+	
+	There are three requirements of NIZK proofs (of knowledge): (1) Given a \textbf{random} string $R$, Alice can construct a short proof $\pi=$ PROOF$(P, R)$ such that VERIFY$(\pi, R, N)=true$ iff Alice `really knows $P$'. The concept of `knowing' is captured as follows: (2) If Alice can be fooled into using a \textbf{maliciously crafted $R$}, then $\pi$ will reveal $P$ with a high probability. (3) Additionally, Alice can construct pairs $(\pi', R')$ such that VERIFY$(\pi', R', N) = true$ without knowing any witness $P$ as long as \textbf{she selects $R'$}. Thus, the generation of $R$ is of outmost importance because if the verifier selects $R$, the secret is leaked and if the prover selects $R$ then the proof is not convincing. If given the transcript of a proof, we cannot distinguish between the cases (1) and (3), then the protocol is zero knowledge, intuitively because because given some $(\pi, R)$ pair, there is no way of knowing if it was generated using (1) or (3).
 \end{enumerate}
 
 %Add commitments, etc
@@ -482,7 +505,7 @@ In this section we define a generalized view of transactional semantics of a blo
 
     \begin{enumerate}
 		\item Checks whether the transaction is valid.
-		\item Apply the transaction if if so.
+		\item Apply the transaction if is so.
     \end{enumerate}
 
 	Intuitively, a node does some stateless checks (e.g., whether a signature is valid or the amount is non-negative) and some stateful ones (if Alice indeed has enough funds to send to Bob or if a registered domain has not been taken yet). 
@@ -525,7 +548,7 @@ Abstracting the Bitcoin-like model, a minimal state could be represented as a se
 
 How can we open a box? 
 We can use a Script-like language as in Bitcoin, or we simply have public-keys instead of addresses and signatures instead of scripts. To describe these approaches as well as many others, we say a box is protected by a \textit{proposition} of some kind, and in order to open it, a \textit{proof} of the same kind must be provided. %There are some tricky details we will discuss further.
-Intuitively, a proposition is an NP statement and a proof, its witness.
+Intuitively, a proposition is a NP statement and a proof, its witness.
 
 A box can have some additional data inside. For example, it can contain a domain record or a certificate. The contents of closed boxes are relevant to every node. However, nodes can forget about boxes that have been opened.
 
@@ -535,17 +558,15 @@ Namecoin is a descendant of Bitcoin which in addition to token transfers, introd
 
 Consider a transaction that contains a box with {\em name-register} command specifying a \textit{name} $\rightarrow$ \textit{value} correspondence. Such a box has zero value and is associated with a public key \(pk\). A fee may be required to insert this a box into the minimal state. The box lives in the minimal state for some period of time after which it is considered expired and discarded. It is possible to renew or transfer ownership to a different public key by publishing a \textit{name-update} box, which replaces the original box in the minimal state.
 
-This basic design has a critical flow. If a miner processing a name-register box finds that particular name interesting or worth snatching, nothing prevents him from grabbing that name before it goes into the blockchain. The miner could simply refuse to include original box and put its own one for the same name. This is an example of a
+This basic design has a critical flaw. If a miner processing a name-register box finds that particular name interesting or worth snatching, nothing prevents him from grabbing that name before it goes into the blockchain. The miner could simply refuse to include original box and put its own one for the same name. This is an example of a
 \textit{frontrunning attack}, when an original transaction is suppressed by another one issued by an attacker. In order to avoid frontrunning attacks, Namecoin has \textit{name-new} command to announce the intention to register a name by first registering a cryptographic commitment to the name (without revealing the name). That way, a miner cannot know if the domain name intended to be registered is interesting or not. Later on the name-register command simply opens the commitment. The same attack cannot be applied because the public key of the name-register and name-new must match. An empirical analysis of Namecoin is given in~\cite{kalodner2015empirical}.
 
 
 \subsection{Nxt and Ethereum}	
 
-\knote{Paragraph below sounds unclear}
+Bitcoin has the concept of immutable UTXOs and a Script-based structure for validating public-key and signatures. We can also conceive of a simpler model model where the ledger maps public keys to their balances and transactions to Satoshis transferred between the accounts. We can also have hard-wired semantics that validate public-key and signatures instead of Script code.
 
-After understanding Bitcoin, you might wonder why Bitcoin has a Script-based structure instead of hard-wired semantics that validate public-key and signatures. In fact, why bother with address at all when we could simply map public keys to accounts and transactions to Satoshis transferred between the accounts?
-
-In fact, some of Bitcoin successors have adopted this approach. For example, Nxt has a dedicated notion of accounts. An account is associated with its public key. A transaction transfers tokens from one account to another and needs to be signed by the sender. For such a system, the minimal state is a table holding a correspondence between accounts and their balances.
+Nxt and Ethereum are two examples of such designs, which have use the term {\em account} to define a public-key. A transaction transfers tokens from one account to another and needs to be signed by the sender. For such a system, the minimal state is a table holding a correspondence between accounts and their balances.
 
 This simple explanation, however, has a critical flaw. Suppose Alice has 50 tokens at some time. She issues a signed transaction to pay 5 tokens to Bob. A node will find this valid, and therefore, applicable. After the application Alice has 45 tokens. However, Bob or anyone else can now {\em replay} the same transaction again and again till Alice's account is empty. Our minimal state representation seems to be flawed.
 
@@ -567,7 +588,8 @@ By including transaction root hash into the block-header it is possible to have 
 \subsection{Transactional Layer Generalization}
 
 \knote{Sounds unfinished, we need to say this is just about transactions and state.}
-Let us summarize the common features of various cryptocurrencies.
+
+Let us summarize the common features of various blockchains. At the core is a {\em minimal state} that encodes some shared information between nodes. The minimal state is modified via {\em transactions}, which contain instructions for modifying the minimal state. This idea is broken down into several components as follows:
 
 \begin{enumerate}
 \item{\textbf{A Proposition and A Proof.}}
@@ -595,7 +617,7 @@ Firstly note that we can only hope to achieve this for nodes who follow the same
 %[validity, agreement, termination]
 
 Computer scientists have been studying consensus protocols extensively since early 1980s. A lot of interesting results were obtained. For example, it is impossible to achieve consensus using a deterministic procedure for a set of nodes if they are exchanging messages asynchronously and a single process could fail (Fischer-Lynch-Paterson theorem~\cite{fischer1985impossibility}). 
-Randomizes consensus in open networks with unknown number of participants is pretty new and also a very hard question. 
+Randomized consensus in open networks with unknown number of participants is a hard problem. %pretty new and also a very hard question. 
 
 
 For blockchain consensus protocols, we can state following properties:
@@ -613,8 +635,8 @@ Proof-of-Work (PoW) as a consensus protocol was used for the first time in Bitco
 However, the concept of PoW came before bitcoin in the form of Hashcash~\cite{back2002hashcash}.
 PoW forms the core of Bitcoin, Ethereum and many other cryptocurrencies. The basic idea here is to force miners to iterate over some function with a small probability of success per iteration. A successful result is giving a right to generate a block. The probability is adjusted automatically via \textit{difficulty} parameter \(D\). 
 
-\knote{In Bitcoin, we hash the whole header. Some words about nonce field are needed}
-In case of Bitcoin, the function is just a hash function. The input to the hash is the root of the Merkle tree of transaction hashes as an authenticator of the transactions included. Additionally, we also want a block to refer to a previous block, so we include the hash of the previous block. This ensures that in order to replace a particular block the attacker has to replace all its descendants. As some amount of work is needed to generate each block, the amount of work needed to defeat an honest chain increases exponentially with depth.
+%\knote{In Bitcoin, we hash the whole header. Some words about nonce field are needed}
+In case of Bitcoin, the function is just a hash function. The input to the hash is a header comprising of a nonce, the current difficulty target, the root of the Merkle tree of transaction hashes (as an authenticator of the transactions included), and the hash of the previous block. This ensures that in order to replace a particular block the attacker has to replace all its descendants. As some amount of work is needed to generate each block, the amount of work needed to defeat an honest chain increases exponentially with depth.
 
 With PoW, it is impossible to make a false claim of successful block generation. Such a claim is easily falsifiable, as calling the hash function is very cheap. Thus, PoW also offers protection against Sybil attacks where an attacker creates a large number of fake identities~\cite{douceur2002sybil}.
 
@@ -673,7 +695,7 @@ or from a remote peer. We can state some rules of node view  modification even f
 
 
 
-\section{Complications And Alternative designs}
+\section{Complications and Alternative Designs}
 \label{alternatives}
 In additions to the systems described in this chapter as well as many other systems used around, there are many designs existing only on paper. In this section we quickly observe some proposals. The goal of Scorex is to help to get them from papers to prototype implementations. 
 
@@ -682,7 +704,7 @@ The various alternative designs are proposed to address some of the problems wit
 \begin{enumerate}
 	\item Storage scalability: In Bitcoin, every node must store the entire blockchain (currently over 10 GB). This is a bottleneck as the blockchain becomes older. Proposals have been presented that allow pruning of the blockchain under certain assumptions. 
 	\item Memory usage: The UTXO set is something that needs to be kept in memory for fast validation. This set is currently about 1.5GB.
-	\item Rational behavior: If nodes behave rationally, they will not store the blockchain. Rather they will store only the current UTXO set (SPV nodes go even further and store only those UTXOs that they are interested in). In the long run, this could lead to {\em tragedy of the commons}, where no one has a complete copy of the blockchain.
+	\item Rational behavior: If nodes behave rationally, they will not store the blockchain. Rather they will store only the current UTXO set (SPV nodes go even further and store only those UTXOs that they are interested in). In the long run, this could lead to {\em tragedy of the commons}, where no one has the complete blockchain. In fact, all rational nodes follow SPV.
 	\item Privacy: While Bitcoin uses pseudo-random looking addresses for privacy, some information is inherently leaked. For instance, we can know all the addresses that a given satoshi has traveled to since its creating. Additionally, we can often infer that certain addresses belong to the same entity.
 	\item Delay in confirmations: Bitcoin has an average confirmation time of 10 minutes. However, if the size of the unconfirmed transactions is higher than the maximum network throughput (1 MB/10 minutes), then a transaction can remain unconfirmed for tens of hours. Additionally, since PoW is a randomized process, there is no guarantee that a block will be mined soon, even if the transaction fee is very high.
 	\item Transaction throughput: As mentioned in the previous point, the maximum block size is 1 MB. This roughly translates to about an average of 144 MB of data added to the blockchain per day if all blocks are full. Assuming a transaction size of the about 224 bytes (the minimum), we get a maximum of 28086 transactions/hour, which may become a bottleneck. %far less than centralized payment systems such as VISA.
@@ -698,16 +720,18 @@ The various alternative designs are proposed to address some of the problems wit
 \subsection{SPV}
 
 SPV (Simple Payment Verification) was a protocol proposed in the original Bitcoin paper as an alternative to the full-node protocol~\cite{Nakamoto2008}. It is designed to enable lightweight clients that can sync in minutes instead of days and store only a fraction of the information (few MBs) compared to a full node (several GBs).
-In this method, a node only verifies headers from the genesis block onwards and validates only the last few full blocks (enough for rollback).  The key idea in SPV is that the security of PoWs is not measured by block height (the number of blocks since the genesis block) but rather the depth (the number of blocks mined since a particular payment has been confirmed) \knote{???} . This allows clients be able to verify payments quickly. However, the security of SPV has not been formally proven.
+%However, the security of SPV has not been formally proven. 
+In this method, a node only verifies headers from the genesis block onwards and validates only the last few full blocks (enough for rollback). 
+The key idea in SPV is that the security is not measured by a block's height (the number of blocks before it since the genesis block) but rather its depth (the number of blocks mined after it) \knote{???}. 
 
-Implementations of SPV nodes use a protocol extension called {\em bloom filters}, described in BIP 37. They use headers for blocks prior to their wallet's birth timestamp, and request filtered blocks for the rest by sending a bloom filter to its peers. The peers then send the relevant transactions for blocks along with the Merkle paths.\footnote{http://bitcoin.stackexchange.com/a/11721/2075}
+Implementations of SPV nodes use a protocol extension called {\em Bloom filters}, described in Bitcoin Improvement Proposal (BIP) \#37. They use headers for blocks prior to their wallet's birth timestamp, and request filtered blocks for the rest by sending a bloom filter to its peers. The peers then send the relevant transactions for blocks along with the Merkle paths.\footnote{http://bitcoin.stackexchange.com/a/11721/2075}
 
 \subsection{Rollerchain}
 
 Rollerchain~\cite{DBLP:journals/corr/ChepurnoyLO16} (RC) is a proposal aimed to (1) reduce storage and (2) enforce nodes to store blocks and prevent tragedy of the commons. RC stores data only for verifying recent $k$ iterations for some security parameter $k$. This is similar to SPV mode, where the nodes additionally store the last $k$ blocks. However, rational nodes in RC are {\em enforced} to store the entire sequence of blocks for a certain depth $\leq k$ determined solely from the public key. To create a successful PoW, nodes must additionally prove storage of one or more snapshots (i.e., minimal states) determined via a hash of their public key and the current block index. Since the index changes with each block, there is a {\em sliding window} of snapshots from which a node must store a few. The index of stored snapshots also slides with the window and nodes must recompute this at every new block. Consequently, nodes are implicitly forced to store all the blocks till the depth of their earliest snapshot.
 In RC, the block header contains a Merkle root hash of the minimal state that will be obtained after the block is applied. Additionally, the Merkle root hash of the transactions and a Proof of Storage of snapshots is also present in the header. 
 
-[Not very clear how the Proof of storage works -- Alex, please add some text?]
+\anote{Not very clear to me how the Proof of storage works -- Alex, please add some text.}
 
 
 \subsection{GHOST}
@@ -742,9 +766,11 @@ ByzCoin~\cite{kokorisposter} builds on the ideas of NG of separating the confirm
 
 The key difference with NG is that while a transaction is instantly confirmed in NG, it is not permanent in the case of dishonest miners because there is no control over how a miner generates micro-blocks. ByzCoin adds a level of consensus even for micro-blocks so the chance of those rolling back is negligible compared to NG.
 
-\subsection{OWAS}
+\subsection{Composite Signatures}
 
-OWAS (One-Way Aggregate Signatures) is an approach proposed in~\cite{saxena2014increasing} for enhancing anonymity (the updated version of the paper calls it {\em composite signatures}). OWAS is based on another idea called Aggregate Signatures~\cite{boneh2003aggregate}. In this, several signatures can be combined into one short object -- the aggregate signature -- that can be verified against all the (public-key, message) pairs of the original signatures and the verification yields true if and only if all the original (public-key, message, signature) triplets verified correctly before aggregation. This itself has the advantage of reducing the sizes of very large transactions by compacting the signature. Aggregate signatures, however, can be tweaked so that the aggregation process becomes one-way; given just the aggregate signature, it is very hard to extract the constituents. This gives someone the ability to aggregate two unrelated signatures so that no one can later separate them. OWAS uses this idea to combine a signed input (which releases Satoshis from an address) with an unrelated output (which consumes those Satoshis) such that at the time of signing, the holder of the Satoshis may not even know who the recipient is. For instance, the sender could simply sign a input releasing the Satoshis and hand it over to some (possibly unknown) receiver over a private channel without specifying in the signature where the Satoshis should go. This is equivalent to handing out a ``blank cheque''. The receiver can then add an arbitrary signature sending those Satoshis to some address. This can be further combined with more such transactions over a private network before sending the large transaction to the public network. There can be various mechanisms of doing the private computation (such as sending it to an aggregator).
+Composite signatures is an approach proposed in~\cite{saxena2014increasing} for enhancing anonymity (an earlier version of the paper calls it (One-Way Aggregate Signatures (OWAS)). Composite signatures are based on another primitive called Aggregate Signatures~\cite{boneh2003aggregate}. In this, several individual signatures can be combined into one short object -- the aggregate signature -- that can be verified against all the (public-key, message) pairs of the individual signatures and the verification yields true if and only if all the individual (public-key, message, signature) triplets verified correctly before aggregation. This itself has the advantage of reducing the sizes of very large transactions by compacting the signature. 
+
+Aggregate signatures, however, can be tweaked so that the aggregation process becomes one-way; given just the aggregate signature, it is very hard to extract the constituents. This gives someone the ability to aggregate two unrelated signatures so that no one can later separate them. Composite signatures use this idea to combine a signed input (which releases Satoshis from an address) with an unrelated output (which consumes those Satoshis) such that at the time of signing, the holder of the Satoshis may not even know who the recipient is. For instance, the sender could simply sign a input releasing the Satoshis and hand it over to some (possibly unknown) receiver over a private channel without specifying in the signature where the Satoshis should go. This is equivalent to handing out a ``blank cheque''. The receiver can then add an arbitrary signature sending those Satoshis to some address. This can be further combined with more such transactions over a private network before sending the large transaction to the public network. There can be various mechanisms of doing the private computation (such as sending it to an aggregator).
 
 
 \section{ZeroCash}
@@ -752,7 +778,7 @@ OWAS (One-Way Aggregate Signatures) is an approach proposed in~\cite{saxena2014i
 ZeroCash (ZCash)~\cite{sasson2014zerocash} is a blockchain based protocol designed for privacy. Since the data in the Bitcoin blockchain is public, true anonymity is not present.
  ZCash can be considered an extension of ZeroCoin (ZCoin)~\cite{miers2013zerocoin}, an earlier proposal. In order to describe ZCash, we will first describe ZCoin.
 
-Assume that all coins to be obfuscated are of a single denomination, say 1 BTC. ZCoin has its own currency (say Z), such that 1 Z = 1 BTC. There is a pool of obfuscated Z coins called {\em Zero-Pool}. Alice wants to anonymize her Bitcoin represented by serial number $c_A$. In order to do that, she begins by exchanging $c_A$ with an equivalent Z coin as follows. She generates a secret serial number $s_A$ and another secret $r_A$. Then she creates a commitment $z_A$ to $s_A$ using $r_A$ as randomness. That is, $z_A=$ COMM$_{r_A}(s_A)$, which is the Z coin Alice will use in exchange for $c_A$. All such exchanged coins are automatically added to the Zero-Pool. The commitment is computationally binding and perfectly hiding so no knowledge of $s_A$ or $r_A$ is leaked from $z_A$. Later on Alice will take back her $z_A$ using a transaction $t_A$, which is then automatically converted to 1 BTC. For anonymity, an adversary should not be able to link $t_A$ to $z_A$. This is achieved using Non-interactive Zero-Knowledge Proofs (NIZKs).\footnote{A NIZK proof is understood as follows. Let $N$ be an instance of a hard problem, such as finding the factors of a large integer. Let $P$ be a witness to this problem that Alice knows. There are three requirements of NIZK proofs: (1) Given a \textbf{random} string $R$, Alice can construct a short proof $\pi=$ PROOF$(P, R)$ such that VERIFY$(\pi, R, N)=true$ iff Alice `really knows $P$'. The concept of `knowing' is captured as follows: (2) If Alice can be fooled into using a \textbf{maliciously crafted $R$}, then $\pi$ will reveal $P$ with a high probability. (3) Additionally, Alice can construct pairs $(\pi', R')$ such that VERIFY$(\pi', R', N) = true$ without knowing any witness $P$ as long as \textbf{she selects $R'$}. Thus, the generation of $R$ is of outmost importance because if the verifier selects $R$, the secret is leaked and if the prover selects $R$ then the proof is not convincing. If given the transcript of a proof, we cannot distinguish between the cases (1) and (3), then the protocol is zero knowledge, intuitively because because given some $(\pi, R)$ pair, there is no way of knowing if it was generated using (1) or (3).}
+Assume that all coins to be obfuscated are of a single denomination, say 1 BTC. ZCoin has its own currency (say Z), such that 1 Z = 1 BTC. There is a pool of obfuscated Z coins called {\em Zero-Pool}. Alice wants to anonymize her Bitcoin represented by serial number $c_A$. In order to do that, she begins by exchanging $c_A$ with an equivalent Z coin as follows. She generates a secret serial number $s_A$ and another secret $r_A$. Then she creates a commitment $z_A$ to $s_A$ using $r_A$ as randomness. That is, $z_A=$ COMM$_{r_A}(s_A)$, which is the Z coin Alice will use in exchange for $c_A$. All such exchanged coins are automatically added to the Zero-Pool. The commitment is computationally binding and perfectly hiding so no knowledge of $s_A$ or $r_A$ is leaked from $z_A$. Later on Alice will take back her $z_A$ using a transaction $t_A$, which is then automatically converted to 1 BTC. For anonymity, an adversary should not be able to link $t_A$ to $z_A$. This is achieved using Non-interactive Zero-Knowledge Proofs (NIZKs).
 
 Alice creates a spend by revealing $s_A$ (but not $r_A$) and creates a NIZK proof of the NP statement ``I know $r$ such that $z=\text{COMM}_r(s_A)$ and $z \in \text{Zero-Pool}$''. The process of creating a commitment and revealing only one input (but never opening them completely) may seem counter-intuitive, but this in fact makes the statement provable by efficient NIZKs, because the circuit for computing the commitment can be efficiently coded into an NP language. The spend could have been done even without revealing $s_A$. However, this is needed for the next property -- security -- so that Alice should not be able to spend $z_A$ twice. This is achieved by keeping track of spent $s_A$s in a public ledger, kept by each client. 
 
@@ -761,7 +787,8 @@ ZCash is an extension of ZCoin with the following differences:
 	\item In ZCash, the coins are minted in the protocol itself rather than exchanged with Bitcoins. This allows people to transact directly in ZCash rather than using it as an add-on to Bitcoin or another currency. In other words, the spent coins also generate Z coins.
 	\item The statement  ``I know $r$ such that $z=\text{COMM}_r(s_A)$ and $z \in \text{Zero-Pool}$'' is replaced by the NP statement  ``I know $r$ such that $z =$ COMM$_r(s_A)$ and $z$ is a leaf node of a Merkle tree with root hash $M$'', where $M$ is the root hash of the Merkle tree of Z coins in the Zero-Pool. This makes the statements much shorter. The value $s_A$ is revealed in order to prevent double spends as in ZCoin.
 
-	\item ZCash uses a variant of NIZKs called zkSNARKs (succinct non-interactive arguments of knowledge)~\cite{cryptoeprint:2013:879,ben2013snarks}. A zkSNARK is essentially a NIZK with the proof and verification-time O(1), and secure against only a computationally bound adversary. Note that the zkSNARKs used in the ZeroCash paper~\cite{sasson2014zerocash} require pre-computation. %We don't know efficient zkSNARKs without pre-computation.
+	\item ZCash uses a variant of NIZKs called zkSNARKs (succinct non-interactive arguments of knowledge)~\cite{cryptoeprint:2013:879,ben2013snarks}. A zkSNARK is essentially a NIZK with the 
+	proof size and verification-time O(1), and secure against only a computationally bound adversary. Note that the zkSNARKs used in the ZeroCash paper~\cite{sasson2014zerocash} require pre-computation. %We don't know efficient zkSNARKs without pre-computation.
 
 	\item ZCash allows coins of arbitrary denominations instead of 1 BTC as in ZCoin. This is done by introducing a {\em pour} operation that uses a bunch of Z coins and creates new ones without revealing the amount in either the destroyed or created ones. The only thing revealed is that the sum of inputs is $\leq$ sum of outputs. This is done by appropriately modifying the Z coins and proving the corresponding NP statement using zkSNARKs. \end{enumerate}
 
@@ -798,6 +825,8 @@ Some of the alternate blockchain designs we described were:
 %
 
 \chapter{Scorex}           % chapter 2
+\label{impl}
+
 \section{Introduction}     % section 2.1
 
 Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code. What do you need to do in order to build something on Scorex is to provide implementations for all the abstract interfaces~(possibly reusing code previously written for our projects).
@@ -819,15 +848,18 @@ Scala is functional, modular and also object-oriented language. There are severa
 
 \subsection{Propositions and Proofs}
 
-In the first place, we are getting into a mechanism to protect binary objects, e.g. transaction outputs, from non-permissioned access. We protect an object with a \textit{proposition}. Then in order to make an action with an object it is needed to provide a \textit{proof} for its proposition. 
+Blockchain can be thought of a mechanism to control access to some protected objects (such as transaction outputs). An object is protected by a {\em proposition} and a {\em proof} for that proposition is needed in order to modify the object.
 
-Proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as:
+%In the first place, we are getting into a mechanism to protect binary objects, e.g. transaction outputs, from non-permissioned access. We protect an object with a \textit{proposition}. Then in order to make an action with an object it is needed to provide a \textit{proof} for its proposition. 
 
+A proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as:
+
+\small{
 \begin{lstlisting}
 trait Proposition extends BytesSerializable
 \end{lstlisting}
-
-In most cases, a proposition claims proof of knowledge of a secret to be provided in a non-interactive zero-knowledge form. For example, in most of popular signature schemes a digital signature is a non-interactive zero-knowledge proof of a private key knowledge. Scorex has a basic entity for that
+}
+In most cases, a proposition requires a proof of knowledge of a secret to be provided in a non-interactive zero-knowledge form. For example, in most of popular signature schemes a digital signature is a non-interactive zero-knowledge proof of a private key knowledge. Scorex has a basic entity for that
 
 \begin{lstlisting}
 trait ProofOfKnowledgeProposition[S <: Secret] extends Proposition
