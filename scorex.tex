@@ -980,5 +980,35 @@ The module contains an implementation of Permacoin consensus protocol~\cite{mill
 
 \bibliographystyle{plain}
 \bibliography{sources}
+\appendix
+\section*{A. NIZK Proofs}
+
+This section gives an example of NIZK proofs. Before that, we first give an {\em Interactive Zero-Knowledge Proof} (of Knowledge). Assume that $n$ is a public composite integer that is hard to factor.
+Let $y\in \mathbb{Z}^*_n$ be a public value. In the following 3-step protocol, a prover $P$ proves to a verifier $V$, the knowledge of some secret $x$ such that $y\equiv x^2 \pmod{n}$.
+Note that without the factors of $n$, not only is it hard to find any such $x$, but also it is hard to decide if such an $x$ even exists. 
+
+\begin{enumerate}
+	\item $P$ generates $r\rand \mathbb{Z}^*_n$ and sends $s = r^2\bmod{n}$ to $V$.
+	\item $V$ randomly selects a bit $b\rand \{0, 1\}$ and sends $b$ to $P$.
+	\item $P$ sends $z=x^br \bmod{n}$ to $V$, who accepts if $z^2 \equiv y^bs\pmod{n}$
+\end{enumerate}
+
+First observe that the above protocol is a {\em proof of knowledge} because if $P$ can be `reset' (i.e., forced to use the same randomness) then $V$ can extract $x$ by resetting $P$ and giving it a different $b$ in the second run of the protocol. 
+
+To see that it is zero knowledge, first note that if $P$ indeed knows such an $x$ then $P$ can respond in the third step such that $V$ accepts 100\% of the time. On the other hand, if $P$ does not know any such $x$ than $P$ can attempt to guess $b$ and select $s$ differently (i.e., $s=r^2/y^b$) and still make $V$ accept in the third step (by setting $z=r$) as long as the guess was correct. 
+Since the chance of correctly guessing $b$ is 50\%, therefore, a cheating $P$ can make $V$ accept only 50\% of the time. 
+Given the protocol transcript where $V$ accepts, there is no way to decide if $P$ indeed knew $x$ because $P$ still has 50\% chance of cheating without knowing $x$. Hence the protocol is zero-knowledge.
+
+We know that the probability of a cheating $P$ succeeding is $1/2$ in one run of the protocol. This implies that for $m$ {\em parallel runs}, the probability of a cheating $P$ succeeding is $1/2^m$, which vanishes exponentially in $m$. 
+
+We give the $m$-parallel round protocol below.
+
+\begin{enumerate}
+	\item $P$ generates $r_1, r_2, \ldots, r_m\rand \mathbb{Z}^*_n$ and sends $s_i = r_i^2\bmod{n}$ to $V$ for $1\leq i\leq m$.
+	\item $V$ randomly selects $m$ bits $b_i\rand \{0, 1\}$  for $1\leq i\leq m$ and sends all $b_i$s to $P$.
+	\item $P$ computes $z_i=x^{b_i}r_i \bmod{n}$ and sends all $z_i$s to $V$ (for $1\leq i\leq m$). $V$ accepts if $z_i^2 \equiv y^{b_i}s_i\pmod{n}$  (for $1\leq i\leq m$).
+\end{enumerate}
+
+We will use the Fiat-Shamir heurestic to convert the above to a NIZK Proof. As before $P$ generates $r_i$s and sets $s_i = r_i^2\bmod{n}$. It then computes $h = H(r_1, r_2, \ldots, r_m)$ for a one-way hash function $H$ that outputs $m$ bits. $P$ then emulates Step 2 by setting $b_i$ as the $i^{th}$ bit of $h$. Finally $P$ emulates Step 3 and the entire transcript of the three emulated steps forms the NIZK proof.
 
 \end{document}	
