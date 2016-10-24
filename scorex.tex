@@ -705,7 +705,6 @@ The various alternative designs are proposed to address some of the problems wit
 \subsection{SPV}
 
 SPV (Simple Payment Verification) was a protocol proposed in the original Bitcoin paper as an alternative to the full-node protocol~\cite{Nakamoto2008}. It is designed to enable lightweight clients that can sync in minutes instead of days and store only a fraction of the information (few MBs) compared to a full node (several GBs).
-%However, the security of SPV has not been formally proven. 
 In this method, a node only verifies headers from the genesis block onwards and validates only the last few full blocks (enough for rollback). 
 The key idea in SPV is that the security is not measured by a block's height (the number of blocks before it since the genesis block) but rather its depth (the number of blocks mined after it) \knote{???}. 
 
@@ -713,11 +712,18 @@ Implementations of SPV nodes use a protocol extension called {\em Bloom filters}
 
 \subsection{Rollerchain}
 
-Rollerchain~\cite{DBLP:journals/corr/ChepurnoyLO16} (RC) is a proposal aimed to (1) reduce storage and (2) enforce nodes to store blocks and prevent tragedy of the commons. RC stores data only for verifying recent $k$ iterations for some security parameter $k$. This is similar to SPV mode, where the nodes additionally store the last $k$ blocks. However, rational nodes in RC are {\em enforced} to store the entire sequence of blocks for a certain depth $\leq k$ determined solely from the public key. To create a successful PoW, nodes must additionally prove storage of one or more snapshots (i.e., minimal states) determined via a hash of their public key and the current block index. Since the index changes with each block, there is a {\em sliding window} of snapshots from which a node must store a few. The index of stored snapshots also slides with the window and nodes must recompute this at every new block. Consequently, nodes are implicitly forced to store all the blocks till the depth of their earliest snapshot.
-In RC, the block header contains a Merkle root hash of the minimal state that will be obtained after the block is applied. Additionally, the Merkle root hash of the transactions and a Proof of Storage of snapshots is also present in the header. 
-
-\anote{Not very clear to me how the Proof of storage works -- Alex, please add some text.}
-
+Rollerchain~\cite{DBLP:journals/corr/ChepurnoyLO16} (RC) is a proposal aimed to (1) reduce storage and
+(2) incentivizing nodes to store some number of last blocks and also state snapshots~(minimal states in a standard
+representation). There are two main parameters of the scheme, $n$ and $k$. The parameter $n$ specifies number of blocks~(
+and also state snapshots) a network aims to store collectively~(so a sufficiently large network stores last $n$ full
+blocks and also state snapshots), while each miner is storing $k$ state snapshots. To create a successful PoW, nodes
+must present proofs for the $k$ state snapshots determined via a hash of their public key and the current block index.
+Since the index changes with each block, there is a {\em sliding window} of snapshots from which a node must store a few.
+The index of stored snapshots also slides with the window and nodes must recompute this at every new block. Consequently,
+nodes are implicitly forced to store all the blocks till the depth of their earliest snapshot.
+In RC, the block header contains a Merkle root hash of the minimal state that will be obtained after the block is
+applied. Additionally, the Merkle root hash of the transactions and a Proof of Storage of snapshots is also present
+in the header.
 
 \subsection{GHOST}
 
