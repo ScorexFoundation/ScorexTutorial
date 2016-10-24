@@ -620,7 +620,7 @@ Computer scientists have been studying consensus protocols extensively since ear
 Randomized consensus in open networks with unknown number of participants is a hard problem. %pretty new and also a very hard question. 
 
 
-For blockchain consensus protocols, we can state following properties:
+For blockchain consensus protocols, we can state following properties~\cite{Garay2015}:
 
 \begin{enumerate}
 \item{Consistency (or Prefix immutability)} - for two honest nodes the probability to have different prefixes after cutting last \(k\) blocks should go down exponentially with \(k\).
@@ -809,7 +809,7 @@ Some of the alternate blockchain designs we described were:
 	\item {\em Application:} Currency (Bitcoin), Domain names (Namecoin), Smart contracts (Ethereum).
 	\item {\em Fast confirmations and larger throughput:} Bitcoin-NG, ByzCoin.
 	\item {\em Lightweight clients and reduced storage:} SVP clients, Rollerchain.
-	\item {\em Anonymity:} ZeroCash, ZeroCoin, OWAS.
+	\item {\em Anonymity:} ZeroCash, ZeroCoin, Composite Signatures.
 \end{enumerate}
 
 
@@ -987,7 +987,7 @@ This section gives an example of a {\em Non-Interactive Zero-Knowledge} (NIZK) p
 
 \paragraph{An Interactive Proof:} Assume that $n$ is a public composite integer that is hard to factor.
 Let $y\in \mathbb{Z}^*_n$ be a public value. In the following 3-step protocol, a prover $P$ proves to a verifier $V$, the {\em knowledge} of some secret $x$ such that $y\equiv x^2 \pmod{n}$.
-Note that without the factors of $n$, not only is it hard to find any such $x$, but also it is hard to decide if such an $x$ even exists. In other words, it is hard to decide if $y$ is a {\em  quadratic residue} modulo $n$.\footnote{We could envision a different scenario where $P$ proves to $V$ that $y$ is indeed a quadratic residue modulo $n$ without necessarily proving that $P$ `knows' a square root of $y$. This is called a {\em proof of membership}. A proof of knowledge is stronger in that it additionally allows $V$ to extract the square root of $y$ if $P$'s state can be reset to use the same randomness.}
+Note that without the factors of $n$, not only is it hard to find any such $x$, but also it is hard to decide if $x$ even exists. In other words, it is hard to decide if $y$ is a {\em  quadratic residue} modulo $n$.\footnote{We could envision a different scenario where $P$ proves to $V$ that $y$ is indeed a quadratic residue modulo $n$ without necessarily proving that $P$ `knows' a square root of $y$. This is called a {\em proof of membership}. A proof of knowledge is stronger in that it additionally allows $V$ to extract the square root of $y$ if $P$'s state can be reset to use the same randomness.}
 
 
 \begin{enumerate}
@@ -996,9 +996,9 @@ Note that without the factors of $n$, not only is it hard to find any such $x$, 
 	\item $P$ sends $z=x^br \bmod{n}$ to $V$, who accepts if $z^2 \equiv y^bs\pmod{n}$
 \end{enumerate}
 
-First observe that the above protocol is a {\em proof of knowledge} because if $P$ can be `reset' (i.e., forced to use the same randomness) then $V$ can extract $x$ by resetting $P$ and giving it a different $b$ in the second run of the protocol. 
+First observe that the protocol is a {\em proof of knowledge} because if $P$ can be ``reset'' (i.e., be forced to reuse randomness) then $V$ can extract $x$ by resetting $P$ and giving it a different $b$ in the second run of the protocol. 
 
-To see that it is zero knowledge, first note that if $P$ indeed knows such an $x$ then $P$ can respond in the third step such that $V$ accepts 100\% of the time. On the other hand, if $P$ does not know any such $x$ than $P$ can attempt to guess $b$ and select $s$ differently (i.e., $s=r^2/y^b$) and still make $V$ accept in the third step (by setting $z=r$) as long as the guess was correct. 
+To see that it is zero knowledge, first note that if $P$ indeed knows $x$ then $P$ can respond in the third step such that $V$ accepts 100\% of the time. On the other hand, if $P$ does not know any such $x$ than $P$ can attempt to guess $b$ and select $s$ differently (i.e., $s=r^2/y^b$) and still make $V$ accept in the third step (by setting $z=r$) as long as the guess was correct. 
 Since the chance of correctly guessing $b$ is 50\%, therefore, a cheating $P$ can make $V$ accept only 50\% of the time. 
 Given the protocol transcript where $V$ accepts, there is no way to decide if $P$ indeed knew $x$ because $P$ still has 50\% chance of cheating without knowing $x$. Hence the protocol is zero-knowledge.
 
@@ -1016,4 +1016,5 @@ We know that the probability of a cheating $P$ succeeding in one run of the prot
 
 $P$ generates $r_i$s and sets $s_i = r_i^2\bmod{n}$. $P$ then computes $h = H(r_1, r_2, \ldots, r_m)$ for a one-way hash function $H$ that outputs $m$ bits. $P$ then emulates Step 2 by setting $b_i$ as the $i^{th}$ bit of $h$. Finally $P$ emulates Step 3 and the entire transcript of the three emulated steps forms the NIZK proof.
 
+\paragraph{NIZK proofs for NP:} The above proof is for a particular NP language, the set of quadratic residues modulo $n$. Since this is not believed to be NP-Complete, we cannot use this to construct NIZK proofs for arbitrary NP statements. However, similar techniques can be used for {\em circuit satisfiability} (SAT), a problem known to be NP-Complete. One construction based on pairings is given in~\cite{groth2006perfect}. We create a NIZK proof for an arbitrary NP statement $s$ by first reducing it to $t$, an instance of SAT. Then we give a NIZK proof of $t$, which is equivalent to a NIZK proof of $s$. Note that such reductions, although polynomial time, are inefficient in practice. Hence, we often use specialized NIZK proof (such as the ones given above).
 \end{document}	
