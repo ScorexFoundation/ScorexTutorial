@@ -62,10 +62,8 @@
   tabsize=3,
 }
 \newtheorem{claim1}{Claim}
-%\newtheorem{lemma}{Lemma}
 \newtheorem{dfn}{Definition}
 \newtheorem{defn}{Definition}
-%\newtheorem{definition}{Definition}
 \newcommand{\ma}{\mathcal{A}}
 \newcommand{\mb}{\mathcal{B}}
 \newcommand{\he}{\hat{e}}
@@ -93,10 +91,6 @@
 \newcommand{\btc}{\includegraphics[height=8pt]{assets/btc.jpg}}
 
 \begin{document}
-
-%\lstset{language=Scala}
-%\begin{lstlisting}[style=myScalastyle]
-%
 
 \title{Scorex Tutorial}
 \author{Alexander Chepurnoy and also an anonymous contributor}         
@@ -824,14 +818,14 @@ Some of the alternate blockchain designs we described were:
 %
 %
 
-\chapter{Scorex}           % chapter 2
+\chapter{Scorex}           
 \label{impl}
 
-\section{Introduction}     % section 2.1
+\section{Introduction}     
 
 Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code. What do you need to do in order to build something on Scorex is to provide implementations for all the abstract interfaces~(possibly reusing code previously written for our projects).
 
-\subsection{Scala Language}         % subsection 2.1.1
+\subsection{Scala Language}
 
 We will describe some concepts of Scala language in sections started with ``*''. If you already a Scala developer you can miss the sections. Experience with programming languages~(say, Java, C++, OCaml or Rust) is needed as we will explain Scala features used in code snippets provided very quickly. For a good introduction into the Scala language, please refer to~\cite{odersky2008programming}.
 
