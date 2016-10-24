@@ -93,7 +93,7 @@
 \begin{document}
 
 \title{Scorex Tutorial}
-\author{Alexander Chepurnoy and also an anonymous contributor}         
+\author{Alexander Chepurnoy}         
 \date{June-August, 2016}
 \maketitle
 
@@ -484,7 +484,7 @@ Below are the cryptographic primitives needed to construct blockchain systems de
 	
 	\item {\em Non-Interactive Zero-Knowledge (NIZK) Proofs:} Let $N$ be an instance of any NP problem, such as finding the factors of a large integer. Let $P$ be a witness to this problem that Alice knows. 
 	
-	There are three requirements of NIZK proofs (of knowledge): (1) Given a \textbf{random} string $R$, Alice can construct a short proof $\pi=$ PROOF$(P, R)$ such that VERIFY$(\pi, R, N)=true$ iff Alice `really knows $P$'. The concept of `knowing' is captured as follows: (2) If Alice can be fooled into using a \textbf{maliciously crafted $R$}, then $\pi$ will reveal $P$ with a high probability. (3) Additionally, Alice can construct pairs $(\pi', R')$ such that VERIFY$(\pi', R', N) = true$ without knowing any witness $P$ as long as \textbf{she selects $R'$}. Thus, the generation of $R$ is of outmost importance because if the verifier selects $R$, the secret is leaked and if the prover selects $R$ then the proof is not convincing. If given the transcript of a proof, we cannot distinguish between the cases (1) and (3), then the protocol is zero knowledge, intuitively because because given some $(\pi, R)$ pair, there is no way of knowing if it was generated using (1) or (3).
+	There are three requirements of NIZK proofs (of knowledge): (1) Given a \textbf{random} string $R$, Alice can construct a short proof $\pi=$ PROOF$(P, R)$ such that VERIFY$(\pi, R, N)=true$ iff Alice `really knows $P$'. The concept of `knowing' is captured as follows: (2) If Alice can be fooled into using a \textbf{maliciously crafted $R$}, then $\pi$ will reveal $P$ with a high probability. (3) Additionally, Alice can construct pairs $(\pi', R')$ such that VERIFY$(\pi', R', N) = true$ without knowing any witness $P$ as long as \textbf{she selects $R'$}. Thus, the generation of $R$ is of outmost importance because if the verifier selects $R$, the secret is leaked and if the prover selects $R$ then the proof is not convincing. If given the transcript of a proof, we cannot distinguish between the cases (1) and (3), then the protocol is zero knowledge, intuitively because because given some $(\pi, R)$ pair, there is no way of knowing if it was generated using (1) or (3). An example of a NIZK proof is given in Appendix A.
 \end{enumerate}
 
 %Add commitments, etc
@@ -977,9 +977,12 @@ The module contains an implementation of Permacoin consensus protocol~\cite{mill
 \appendix
 \section*{A. NIZK Proofs}
 
-This section gives an example of NIZK proofs. Before that, we first give an {\em Interactive Zero-Knowledge Proof} (of Knowledge). Assume that $n$ is a public composite integer that is hard to factor.
-Let $y\in \mathbb{Z}^*_n$ be a public value. In the following 3-step protocol, a prover $P$ proves to a verifier $V$, the knowledge of some secret $x$ such that $y\equiv x^2 \pmod{n}$.
-Note that without the factors of $n$, not only is it hard to find any such $x$, but also it is hard to decide if such an $x$ even exists. 
+This section gives an example of a {\em Non-Interactive Zero-Knowledge} (NIZK) proof (of knowledge). We illustrate this by first giving an example of an {\em Interactive Zero-Knowledge Proof} of Knowledge and then convert this to a non-interactive proof. 
+
+\paragraph{An Interactive Proof:} Assume that $n$ is a public composite integer that is hard to factor.
+Let $y\in \mathbb{Z}^*_n$ be a public value. In the following 3-step protocol, a prover $P$ proves to a verifier $V$, the {\em knowledge} of some secret $x$ such that $y\equiv x^2 \pmod{n}$.
+Note that without the factors of $n$, not only is it hard to find any such $x$, but also it is hard to decide if such an $x$ even exists. In other words, it is hard to decide if $y$ is a {\em  quadratic residue} modulo $n$.\footnote{We could envision a different scenario where $P$ proves to $V$ that $y$ is indeed a quadratic residue modulo $n$ without necessarily proving that $P$ `knows' a square root of $y$. This is called a {\em proof of membership}. A proof of knowledge is stronger in that it additionally allows $V$ to extract the square root of $y$ if $P$'s state can be reset to use the same randomness.}
+
 
 \begin{enumerate}
 	\item $P$ generates $r\rand \mathbb{Z}^*_n$ and sends $s = r^2\bmod{n}$ to $V$.
@@ -993,9 +996,9 @@ To see that it is zero knowledge, first note that if $P$ indeed knows such an $x
 Since the chance of correctly guessing $b$ is 50\%, therefore, a cheating $P$ can make $V$ accept only 50\% of the time. 
 Given the protocol transcript where $V$ accepts, there is no way to decide if $P$ indeed knew $x$ because $P$ still has 50\% chance of cheating without knowing $x$. Hence the protocol is zero-knowledge.
 
-We know that the probability of a cheating $P$ succeeding is $1/2$ in one run of the protocol. This implies that for $m$ {\em parallel runs}, the probability of a cheating $P$ succeeding is $1/2^m$, which vanishes exponentially in $m$. 
+We know that the probability of a cheating $P$ succeeding in one run of the protocol is $1/2$. This implies that for $m$ {\em parallel runs}, the probability of a cheating $P$ succeeding is $1/2^m$, which can be made arbitrarily small by increasing $m$. 
 
-We give the $m$-parallel round protocol below.
+\paragraph{A Parallel Interactive Proof:} We give the $m$-parallel round protocol below.
 
 \begin{enumerate}
 	\item $P$ generates $r_1, r_2, \ldots, r_m\rand \mathbb{Z}^*_n$ and sends $s_i = r_i^2\bmod{n}$ to $V$ for $1\leq i\leq m$.
@@ -1003,6 +1006,8 @@ We give the $m$-parallel round protocol below.
 	\item $P$ computes $z_i=x^{b_i}r_i \bmod{n}$ and sends all $z_i$s to $V$ (for $1\leq i\leq m$). $V$ accepts if $z_i^2 \equiv y^{b_i}s_i\pmod{n}$  (for $1\leq i\leq m$).
 \end{enumerate}
 
-We will use the Fiat-Shamir heurestic to convert the above to a NIZK Proof. As before $P$ generates $r_i$s and sets $s_i = r_i^2\bmod{n}$. It then computes $h = H(r_1, r_2, \ldots, r_m)$ for a one-way hash function $H$ that outputs $m$ bits. $P$ then emulates Step 2 by setting $b_i$ as the $i^{th}$ bit of $h$. Finally $P$ emulates Step 3 and the entire transcript of the three emulated steps forms the NIZK proof.
+\paragraph{A Non-Interactive Proof:} We will use the Fiat-Shamir heurestic~\cite{fiat1986prove} to convert the above to a NIZK Proof. In this method, $V$'s challenge in the second step is obtained by applying a  one-way hash function to the value sent to $V$ in Step 1. This approach assumes that the hash function can be modeled using a random oracle.
+
+$P$ generates $r_i$s and sets $s_i = r_i^2\bmod{n}$. $P$ then computes $h = H(r_1, r_2, \ldots, r_m)$ for a one-way hash function $H$ that outputs $m$ bits. $P$ then emulates Step 2 by setting $b_i$ as the $i^{th}$ bit of $h$. Finally $P$ emulates Step 3 and the entire transcript of the three emulated steps forms the NIZK proof.
 
 \end{document}	
