@@ -489,7 +489,8 @@ Below are the cryptographic primitives needed to construct blockchain systems de
 
 In this section we define a generalized view of transactional semantics of a blockchain system. %The two foundational concepts here are \textit{minimal state} and \textit{transaction}.
 
-\subsection{Minimal State}     % section 1.1
+\subsection{Minimal State}
+\label{min-state}
 	Consider what a node does on receiving a transaction:
 
     \begin{enumerate}
@@ -818,7 +819,11 @@ Some of the alternate blockchain designs we described were:
 
 \section{Introduction}     
 
-Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code. What do you need to do in order to build something on Scorex is to provide implementations for all the abstract interfaces~(possibly reusing code previously written for our projects).
+Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code.
+What do you need to do in order to build something on Scorex is to provide implementations for all the abstract
+interfaces~(possibly reusing code previously written for our projects).
+
+Scorex is intended to build a fullnode implementation, though other security models are possible~(e.g. SPV).
 
 \subsection{Scala Language}
 
@@ -833,7 +838,23 @@ Scala is functional, modular and also object-oriented language. There are severa
 	\item Scala has powerful type system. Scorex is using typing features of the language extensively.
 \end{enumerate}
 
-\section{State Elements}
+\section{The State Design}
+
+A fullnode node is about to get the same \textit{minimal state} representation eventually for a version $h$ as other honest
+nodes.
+
+A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so
+applicable to it or not. See section~\ref{min-state} for details
+
+\begin{lstlisting}
+trait MinimalState[
+    P <: Proposition,
+    BX <: Box[P],
+    TX <: Transaction[P],
+    M <: PersistentNodeViewModifier[P, TX],
+    MS <: MinimalState[P, BX, TX, M, MS]
+] extends NodeViewComponent
+\end{lstlisting}
 
 \subsection{Propositions and Proofs}
 
@@ -903,24 +924,23 @@ trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
   type VL <: Vault[P, TX, VL]
   type MP <: MemoryPool[TX, MP]
 
-
   type NodeView = (HIS, MS, VL, MP)
 \end{lstlisting}
+
+\subsection{A Minimal State}
+
+\begin{lstlisting}
+\end{lstlisting}
+
 
 \subsection{A History}
 
 \begin{lstlisting}
 \end{lstlisting}
 
-\subsection{A Minimal State}
-
-A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so
-applicable to it or not.
-
-\begin{lstlisting}
-\end{lstlisting}
-
 \subsection{A Vault}
+
+A \textit{vault} is a storage for node-specific information
 
 \begin{lstlisting}
 \end{lstlisting}
@@ -931,13 +951,12 @@ applicable to it or not.
 \end{lstlisting}
 
 
-\section{Consensus Layer}
-
 \subsection{Block}
 
 \begin{lstlisting}
 
 \end{lstlisting}
+
 
 \subsection{History and Blockchain}
 
