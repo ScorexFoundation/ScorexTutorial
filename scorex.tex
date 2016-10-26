@@ -838,13 +838,22 @@ Scala is functional, modular and also object-oriented language. There are severa
 	\item Scala has powerful type system. Scorex is using typing features of the language extensively.
 \end{enumerate}
 
-\section{The State Design}
+\section{A Node View}
 
 A fullnode node is about to get the same \textit{minimal state} representation eventually for a version $h$ as other honest
 nodes.
 
+\subsection{Node View Component}
+
+[TODO: fill]
+
+
+\section{The State Design}
+
 A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so
-applicable to it or not. See section~\ref{min-state} for details
+applicable to it or not. See section~\ref{min-state} for details.
+
+A signature of the \textit{MinimalState} is 
 
 \begin{lstlisting}
 trait MinimalState[
