@@ -821,13 +821,11 @@ Some of the alternate blockchain designs we described were:
 
 Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code.
 What do you need to do in order to build something on Scorex is to provide implementations for all the abstract
-interfaces~(possibly reusing code previously written for our projects).
+interfaces~(possibly reusing code previously written).
 
-Scorex is intended to build a fullnode implementation, though other security models are possible~(e.g. SPV).
+Scorex is intended to build a full-node implementation, though other security models are possible~(e.g. SPV).
 
 \subsection{Scala Language}
-
-We will describe some concepts of Scala language in sections started with ``*''. If you already a Scala developer you can miss the sections. Experience with programming languages~(say, Java, C++, OCaml or Rust) is needed as we will explain Scala features used in code snippets provided very quickly. For a good introduction into the Scala language, please refer to~\cite{odersky2008programming}.
 
 Scala is functional, modular and also object-oriented language. There are several reasons to choose this language:
 \begin{enumerate}
@@ -837,6 +835,8 @@ Scala is functional, modular and also object-oriented language. There are severa
 	\item Scala has powerful constructs for concurrency.
 	\item Scala has powerful type system. Scorex is using typing features of the language extensively.
 \end{enumerate}
+
+For a good introduction into the Scala language, please refer to~\cite{odersky2008programming}.
 
 \section{A Node View}
 
@@ -853,7 +853,7 @@ nodes.
 A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so
 applicable to it or not. See section~\ref{min-state} for details.
 
-A signature of the \textit{MinimalState} is 
+A signature of the \textit{MinimalState} is
 
 \begin{lstlisting}
 trait MinimalState[
