@@ -838,13 +838,25 @@ Scala is functional, modular and also object-oriented language. There are severa
 
 For a good introduction into the Scala language, please refer to~\cite{odersky2008programming}.
 
-\section{A Node View}
+\section{A Node View And Its Modification}
 
-A fullnode node is about to get the same \textit{minimal state}~(see Section~\ref{min-state} for details) representation eventually for a version $h$ as other honest nodes.
+The goal of a fullnode node is to get the same \textit{minimal state}~(see Section~\ref{min-state} for details) representation eventually for a version $h$ as other honest nodes, and also some specific information for the node users. To accomplish the goal, as described in the section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
+\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
 
-\subsection{Node View Component}
+This component, a \textit{node view holder}, modifies a node view it holds on getting whether an offchain object, so an offchain transaction, or an on-chain object~(a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc.). Signatures of a trait and its sub-components are as follows:
 
-[TODO: fill]
+\begin{lstlisting}
+trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
+	PMOD <: PersistentNodeViewModifier[P, TX]] extends Actor {
+
+  type SI <: SyncInfo
+  type HIS <: History[P, TX, PMOD, SI, HIS]
+  type MS <: MinimalState[P, _, TX, PMOD, MS]
+  type VL <: Vault[P, TX, PMOD, VL]
+  type MP <: MemoryPool[TX, MP]
+
+  type NodeView = (HIS, MS, VL, MP)
+\end{lstlisting}
 
 
 \section{The State Design}
@@ -914,26 +926,6 @@ trait Box[P <: Proposition] extends BytesSerializable {
 }
 \end{lstlisting}
 
-\section{A Node View}
-
-\subsection{A Node View And A View Modifier}
-
-As described in the section~\ref{fullnodeview}, a node in a blockchain network has a view of the world comprising of four entities:
-\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
-
-This component, a \textit{node view holder}, modifies a node view it hold on getting whether an offchain object, so an offchain transaction, or an on-chain object, so a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc. Signatures of a trait and its sub-components are as follows:
-
-\begin{lstlisting}
-trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
-	PMOD <: PersistentNodeViewModifier[P, TX]] extends Actor {
-
-  type HIS <: History[P, TX, PMOD, HIS]
-  type MS <: MinimalState[P, _, TX, PMOD, MS]
-  type VL <: Vault[P, TX, VL]
-  type MP <: MemoryPool[TX, MP]
-
-  type NodeView = (HIS, MS, VL, MP)
-\end{lstlisting}
 
 \subsection{A Minimal State}
 
