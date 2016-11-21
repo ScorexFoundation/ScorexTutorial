@@ -820,7 +820,7 @@ Some of the alternate blockchain designs we described were:
 \section{Introduction}     
 
 Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code.
-What do you need to do in order to build something on Scorex is to provide implementations for all the abstract
+What do you need to do in order to build something on top of Scorex is to provide implementations for all the abstract
 interfaces~(possibly reusing code previously written).
 
 Scorex is intended to build a full-node implementation, though other security models are possible~(e.g. SPV).
@@ -840,7 +840,7 @@ For a good introduction into the Scala language, please refer to~\cite{odersky20
 
 \section{A Node View And Its Modification}
 
-The goal of a fullnode node is to get the same \textit{minimal state}~(see Section~\ref{min-state} for details) representation eventually for a version $h$ as other honest nodes, and also some specific information for the node users. To accomplish the goal, as described in the section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
+The goal of a fullnode node is to get the same \textit{minimal state}~(see Section~\ref{min-state} for details) representation eventually for a version $h$ as other honest nodes, and also obtain some specific information for the node users from the history and the state. To accomplish the goal, as described in the section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
 \(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
 
 This component, a \textit{node view holder}, modifies a node view it holds on getting whether an offchain object, so an offchain transaction, or an on-chain object~(a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc.). Signatures of a trait and its sub-components are as follows:
@@ -859,8 +859,10 @@ trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
 \end{lstlisting}
 
 
+
 \section{The State Design}
 
+\subsection{A Minimal State}
 A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so
 applicable to it or not. See section~\ref{min-state} for details.
 
@@ -873,8 +875,27 @@ trait MinimalState[
     TX <: Transaction[P],
     M <: PersistentNodeViewModifier[P, TX],
     MS <: MinimalState[P, BX, TX, M, MS]
-] extends NodeViewComponent
+] extends NodeViewComponent{
+  self: MS =>  
+  ...
 \end{lstlisting}
+
+Per our definition, we define methods to validate a transaction: 
+
+\begin{lstlisting}
+  def validate(transaction: TX): Try[Unit]
+
+  def isValid(tx: TX): Boolean = validate(tx).isSuccess
+\end{lstlisting}
+
+The trait also has methods to get a closed box~(see section~\ref{sect_box}), to apply a persistent modifier and to roll back to a previous version: 
+
+\begin{lstlisting}
+  def closedBox(boxId: Array[Byte]): Option[BX]
+  def applyModifier(mod: M): Try[MS]
+  def rollbackTo(version: VersionTag): Try[MS]
+\end{lstlisting}
+
 
 \subsection{Propositions and Proofs}
 
@@ -882,7 +903,7 @@ Blockchain can be thought of a mechanism to control access to some protected obj
 
 %In the first place, we are getting into a mechanism to protect binary objects, e.g. transaction outputs, from non-permissioned access. We protect an object with a \textit{proposition}. Then in order to make an action with an object it is needed to provide a \textit{proof} for its proposition. 
 
-A proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as:
+A proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as: 	
 
 \small{
 \begin{lstlisting}
@@ -912,6 +933,7 @@ trait ProofOfKnowledge[S <: Secret, P <: ProofOfKnowledgeProposition[S]]
 \end{lstlisting}
 
 \subsection{Box}
+\label{sect_box}
 
 A box is a minimal state element. An unspent output in Bitcoin is a box. An account in certain state in Nxt or Ethereum is also a box. Basically, a box is about some amount of tokens associated with it and also some proposition which protects a box from being spent by anyone but a party~(or parties) knowing how to satisfy the proposition. Thus the basic abstraction is as follows:
 
@@ -927,10 +949,6 @@ trait Box[P <: Proposition] extends BytesSerializable {
 \end{lstlisting}
 
 
-\subsection{A Minimal State}
-
-\begin{lstlisting}
-\end{lstlisting}
 
 
 \subsection{A History}
