@@ -94,7 +94,7 @@
 
 \title{Scorex Tutorial}
 \author{Alexander Chepurnoy}         
-\date{June-August, 2016}
+\date{Jun-Nov, 2016}
 \maketitle
 
 \chapter{Executive Summary}
@@ -840,10 +840,10 @@ For a good introduction into the Scala language, please refer to~\cite{odersky20
 
 \section{A Node View And Its Modification}
 
-The goal of a fullnode node is to get the same \textit{minimal state}~(see Section~\ref{min-state} for details) representation eventually for a version $h$ as other honest nodes, and also obtain some specific information for the node users from the history and the state. To accomplish the goal, as described in the section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
+The goal of a fullnode node is to get the same \textit{minimal state}~(see Section~\ref{min-state} for details) eventually for a version $h$ as other honest nodes and also obtain some specific information for the node users from the history and the state. To accomplish the goal, as described in the section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
 \(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
 
-This component, a \textit{node view holder}, modifies a node view it holds on getting whether an offchain object, so an offchain transaction, or an on-chain object~(a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc.). Signatures of a trait and its sub-components are as follows:
+This component, a \textit{node view holder}, modifies a node view it holds on getting whether an offchain object, so an offchain transaction, or an on-chain object~(a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc.) we call \textit{persistent node view modifier}. Type signatures of a trait and its sub-components are as follows:
 
 \begin{lstlisting}
 trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
@@ -858,7 +858,7 @@ trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
   type NodeView = (HIS, MS, VL, MP)
 \end{lstlisting}
 
-
+In the snippet above we can think about types and traits as of modules, where each module is possibly parametrized with other modules~(including self, this pattern is called F-bounded polymorphism~\cite{}). \knote{Write about trait==module in Scala?} A concrete parameter has to be derived from an upper-bound abstract interface~(for example, concrete minimal state representation has to be derived from the \textit{MinimalState} trait).
 
 \section{The State Design}
 
@@ -953,19 +953,76 @@ trait Box[P <: Proposition] extends BytesSerializable {
 
 \subsection{A History}
 
+At the very basic level, Scorex does not have a notion of a blockchain. This is done in order to support blocktrees and other non-linear structures. So Scorex has an abstract concept of \textit{history} defined by the trait \textit{History}.
+
 \begin{lstlisting}
+trait History[P <: Proposition,
+	TX <: Transaction[P],
+	PM <: PersistentNodeViewModifier[P, TX],
+	SI <: SyncInfo,
+	HT <: History[P, TX, PM, SI, HT]] extends NodeViewComponent 
 \end{lstlisting}
+
+A node continuosly tries to get alternative~(and possibly better) histories from the network around and also feed nodes with less developed history with locally stored modifiers. To provide an information on how much local history is developed, there is an abstract type \textit{SyncInfo} mentioned in the type signature of the \textit{History} trait. 
+
+
 
 \subsection{A Vault}
 
-A \textit{vault} is a storage for node-specific information
+A \textit{vault} is a storage for node-specific information. Usually this is about wallet functionality. The information is to be obtained via scanning whether an offchain transaction or a persistent modifier. A rollback is surely possible. Thus the interface of a vault is as follows.  
 
 \begin{lstlisting}
+trait Vault[P <: Proposition, 
+	TX <: Transaction[P],
+    PMOD <: PersistentNodeViewModifier[P, TX], 
+    V <: Vault[P, TX, PMOD, V]] extends NodeViewComponent {
+  self: V =>
+
+  type VersionTag = NodeViewModifier.ModifierId
+
+  def scanOffchain(tx: TX): V
+
+  def scanOffchain(txs: Seq[TX]): V
+
+  def scanPersistent(modifier: PMOD): V
+
+  def rollback(to: VersionTag): Try[V]
+}
 \end{lstlisting}
+
+Scorex also contains \textit{Wallet} interface derived from the \textit{Vault}, parametrized with types of secrets and their public images also.
+
+\begin{lstlisting}
+trait Wallet[P <: Proposition, 
+	TX <: Transaction[P], 
+	PMOD <: PersistentNodeViewModifier[P,TX], 
+	W <: Wallet[P, TX, PMOD, W]] extends Vault[P, TX, PMOD, W] {
+  self: W =>
+
+  type S <: Secret
+  type PI <: ProofOfKnowledgeProposition[S]
+
+  def generateNewSecret(): W
+
+  def historyTransactions: Seq[WalletTransaction[P, TX]]
+
+  def boxes(): Seq[WalletBox[P, _ <: Box[P]]]
+
+  def publicKeys: Set[PI]
+
+  def secrets: Set[S]
+
+  def secretByPublicImage(publicImage: PI): Option[S]
+}
+\end{lstlisting}
+
 
 \subsection{A Memory Pool}
 
+A memory pool holds transaction not included into blocks yet so unconfirmed. We miss its functions here and provide only the simple type signature.  
+
 \begin{lstlisting}
+trait MemoryPool[TX <: Transaction[_], M <: MemoryPool[TX, M]]
 \end{lstlisting}
 
 
@@ -975,9 +1032,6 @@ A \textit{vault} is a storage for node-specific information
 
 \end{lstlisting}
 
-
-\subsection{History and Blockchain}
-
 \section{Network Layer}
 
 Network layer in Scorex is simpler than in Bitcoin or Nxt. 
@@ -985,8 +1039,6 @@ Network layer in Scorex is simpler than in Bitcoin or Nxt.
 \subsection{Peer Discovery}
 
 \subsection{Broadcasting Strategies}
-
-\subsection{View Synchronizing}
 
 \section{Examples}
 There are few examples included into the distribution.
