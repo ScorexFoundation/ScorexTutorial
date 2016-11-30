@@ -867,7 +867,31 @@ A node view could be modified by applying a \textit{node view modifier} to it. T
 
 It is supposed that all the modifiers have identifiers of the same length~(to be set via \textit{application.conf} file with default value of 32 bytes). We argue that the assumption is reasonable as usually identifier is an output of a single hash function.  
 
+Implemented functionalities are getting an identifier and also getting a binary representation of a modifier and each kind of modifier should provide its identifier also:
 
+\begin{lstlisting}
+trait NodeViewModifier extends BytesSerializable with JsonSerializable {
+  ...
+
+  val modifierTypeId: ModifierTypeId
+
+  def id: ModifierId
+
+  lazy val bytes: Array[Byte] = ...
+}
+\end{lstlisting}
+
+We assume log elements in the persistent node view modifiers hierarchy should also refer to a parent. A persistent modifier also can carry transactions~(but that is optional): 
+
+\begin{lstlisting}
+trait PersistentNodeViewModifier[P <: Proposition, TX <: Transaction[P]] extends NodeViewModifier {
+
+  def parentId: ModifierId
+
+  // with Dotty is would be Seq[TX] | Nothing
+  def transactions: Option[Seq[TX]]
+}
+\end{lstlisting}
 
 
 \section{The State Design}
