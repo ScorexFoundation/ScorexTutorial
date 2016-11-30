@@ -92,9 +92,9 @@
 
 \begin{document}
 
-\title{Scorex Tutorial}
-\author{Alexander Chepurnoy}         
-\date{Jun-Nov, 2016}
+\title{The Blockchain and the Scorex Tutorial}
+\author{Alexander Chepurnoy and an anonymous contributor}         
+\date{Jun-Dec, 2016}
 \maketitle
 
 \chapter{Executive Summary}
@@ -102,7 +102,7 @@
 This paper describes the Scorex project and how it can be used to implement blockchain protocols~(such as Bitcoin). Scorex is a framework written in Scala with loosely coupled components. 
 The intended audience is developers willing to create or experiment with such blockchain cores. Some basic knowledge of cryptography, data structures and cryptocurrencies is required. Some programming background is also required to understand the code-snippets. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
 
-In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Ethereum as three distinct applications of blockchain. Scorex gives the underlying framework for developing any of the three applications (and several others) by writing a thin layer of code. 
+In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Ethereum as three distinct applications of the blockchain. Scorex gives the underlying framework for developing any of the three applications (and several others) by writing a thin layer of code. 
 
 \begin{enumerate}
 	\item {\em Bitcoin:} Decentralized currency~\cite{Nakamoto2008}.
@@ -858,7 +858,17 @@ trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
   type NodeView = (HIS, MS, VL, MP)
 \end{lstlisting}
 
-In the snippet above we can think about types and traits as of modules, where each module is possibly parametrized with other modules~(including self, this pattern is called F-bounded polymorphism~\cite{}). \knote{Write about trait==module in Scala?} A concrete parameter has to be derived from an upper-bound abstract interface~(for example, concrete minimal state representation has to be derived from the \textit{MinimalState} trait).
+In the snippet above we can think about types and traits as of modules, where each module is possibly parametrized with other modules~(including self, this pattern is called 
+\textit{F-bounded polymorphism~\cite{}} and being using widely in the Scorex). A concrete parameter has to be derived from an upper-bound abstract interface~(for example, concrete minimal state representation has to be derived from the \textit{MinimalState} trait).
+
+\subsection{Node View Modifiers}
+
+A node view could be modified by applying a \textit{node view modifier} to it. The assumption we made in the design is that there are two kinds of node modifiers. One is \textit{offchain transaction} which is not a part of history log and so to be processed by a memory pool and a wallet only. Another kind is about a hierarchy of \textit{persistent node view modifiers}. In the simplest Bitcoin design the hierarchy is just about a Proof-of-Work block. In Rollerchain the hierarchy of log elements is about three kinds of objects: a blockheader, a state snapshot and a fullblock; with different validation and application rules.
+
+It is supposed that all the modifiers have identifiers of the same length~(to be set via \textit{application.conf} file with default value of 32 bytes). We argue that the assumption is reasonable as usually identifier is an output of a single hash function.  
+
+
+
 
 \section{The State Design}
 
@@ -949,8 +959,6 @@ trait Box[P <: Proposition] extends BytesSerializable {
 \end{lstlisting}
 
 
-
-
 \subsection{A History}
 
 At the very basic level, Scorex does not have a notion of a blockchain. This is done in order to support blocktrees and other non-linear structures. So Scorex has an abstract concept of \textit{history} defined by the trait \textit{History}.
@@ -1019,7 +1027,7 @@ trait Wallet[P <: Proposition,
 
 \subsection{A Memory Pool}
 
-A memory pool holds transaction not included into blocks yet so unconfirmed. We miss its functions here and provide only the simple type signature.  
+A memory pool holds transaction not included into blocks yet so unconfirmed. We omit its functions here~(as they are pretty trivial) and provide only the type signature of the trait.  
 
 \begin{lstlisting}
 trait MemoryPool[TX <: Transaction[_], M <: MemoryPool[TX, M]]
@@ -1028,8 +1036,21 @@ trait MemoryPool[TX <: Transaction[_], M <: MemoryPool[TX, M]]
 
 \subsection{Block}
 
-\begin{lstlisting}
 
+\begin{lstlisting}
+trait Block[P <: Proposition, TX <: Transaction[P]]
+  extends PersistentNodeViewModifier[P, TX] with JsonSerializable {
+
+  def version: Version
+
+  def parentId: NodeViewModifier.ModifierId
+
+  def encodedId: String = Base58.encode(id)
+
+  def json: Json
+
+  def timestamp: Timestamp
+}
 \end{lstlisting}
 
 \section{Network Layer}
