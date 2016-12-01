@@ -1060,6 +1060,7 @@ trait MemoryPool[TX <: Transaction[_], M <: MemoryPool[TX, M]]
 
 \subsection{Block}
 
+It is possible to develop block-less system, the only requirement is to have a history which contains instances of persistence node view modifiers. Nevertheless, the basic interface for a block is provided as it is needed for almost all of imaginable application. In addition to \textit{identifier} and \textit{parent identifier} fields inherited from \textit{PersistentNodeViewModifier}, a \textit{Block} generic interface contains also a version~(we assume block format could change with time) and timestamp.
 
 \begin{lstlisting}
 trait Block[P <: Proposition, TX <: Transaction[P]]
@@ -1067,13 +1068,9 @@ trait Block[P <: Proposition, TX <: Transaction[P]]
 
   def version: Version
 
-  def parentId: NodeViewModifier.ModifierId
-
-  def encodedId: String = Base58.encode(id)
-
-  def json: Json
-
   def timestamp: Timestamp
+
+  ...
 }
 \end{lstlisting}
 
