@@ -995,9 +995,14 @@ trait History[P <: Proposition,
 	HT <: History[P, TX, PM, SI, HT]] extends NodeViewComponent 
 \end{lstlisting}
 
-A node continuosly tries to get alternative~(and possibly better) histories from the network around and also feed nodes with less developed history with locally stored modifiers. To provide an information on how much local history is developed, there is an abstract type \textit{SyncInfo} mentioned in the type signature of the \textit{History} trait. 
+A node continuosly tries to get alternative~(and possibly better) histories from the network around and also feed nodes with less developed history with locally stored modifiers. To provide an information on how much local history is developed, there is an abstract type \textit{SyncInfo} mentioned in the type signature of the \textit{History} trait. We assume that \textit{SyncInfo} at least provides information about \textit{starting points}, persistent modifier identifiers a node sends in order to help other node to understand its synchronization status. Usually it is about last block identifiers. 
 
-
+\begin{lstlisting}
+trait SyncInfo extends BytesSerializable {
+  def answer: Boolean
+  def startingPoints: Seq[(NodeViewModifier.ModifierTypeId, NodeViewModifier.ModifierId)]
+}
+\end{lstlisting}
 
 \subsection{A Vault}
 
