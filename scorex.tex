@@ -992,10 +992,37 @@ trait History[P <: Proposition,
 	TX <: Transaction[P],
 	PM <: PersistentNodeViewModifier[P, TX],
 	SI <: SyncInfo,
-	HT <: History[P, TX, PM, SI, HT]] extends NodeViewComponent 
+	HT <: History[P, TX, PM, SI, HT]] extends NodeViewComponent {
+		def isEmpty: Boolean
+
+  def contains(id: ModifierId): Boolean = modifierById(id).isDefined
+
+  def applicable(modifier: PM): Boolean = openSurfaceIds().exists(_ sameElements modifier.parentId)
+
+  def modifierById(modifierId: ModifierId): Option[PM]
+
+  def append(modifier: PM): Try[(HT, Option[RollbackTo[PM]])]
+
+  def openSurfaceIds(): Seq[ModifierId]
+
+  def continuationIds(from: Seq[(ModifierTypeId, ModifierId)], size: Int): Option[Seq[(ModifierTypeId, ModifierId)]]
+
+  def syncInfo(answer: Boolean): SI
+
+  def compare(other: SI): HistoryComparisonResult.Value	
+	}
 \end{lstlisting}
 
-A node continuosly tries to get alternative~(and possibly better) histories from the network around and also feed nodes with less developed history with locally stored modifiers. To provide an information on how much local history is developed, there is an abstract type \textit{SyncInfo} mentioned in the type signature of the \textit{History} trait. 
+The trait contains no any mention of block or a blockchain. In principle, it supports non-linear structures and many object types to make the log. 
+
+A node continuosly tries to get alternative~(and possibly better) histories from the network around and also feed nodes with less developed history with locally stored modifiers. To provide an information on how much local history is developed, there is an abstract type \textit{SyncInfo} mentioned in the type signature of the \textit{History} trait. We assume that \textit{SyncInfo} at least provides information about \textit{starting points}, persistent modifier identifiers a node sends in order to help other node to understand its synchronization status. Usually it is about last block identifiers. 
+
+\begin{lstlisting}
+trait SyncInfo extends BytesSerializable {
+  def answer: Boolean
+  def startingPoints: Seq[(NodeViewModifier.ModifierTypeId, NodeViewModifier.ModifierId)]
+}
+\end{lstlisting}
 
 
 
