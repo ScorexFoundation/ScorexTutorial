@@ -92,9 +92,9 @@
 
 \begin{document}
 
-\title{Scorex Tutorial}
-\author{Alexander Chepurnoy}         
-\date{June-August, 2016}
+\title{The Blockchain and the Scorex Tutorial}
+\author{Alexander Chepurnoy and an anonymous contributor}         
+\date{Jun-Dec, 2016}
 \maketitle
 
 \chapter{Executive Summary}
@@ -102,7 +102,7 @@
 This paper describes the Scorex project and how it can be used to implement blockchain protocols~(such as Bitcoin). Scorex is a framework written in Scala with loosely coupled components. 
 The intended audience is developers willing to create or experiment with such blockchain cores. Some basic knowledge of cryptography, data structures and cryptocurrencies is required. Some programming background is also required to understand the code-snippets. For good explanation of cryptography primitives and protocols please refer to the foundational book of~\cite{katz2014introduction}. 
 
-In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Ethereum as three distinct applications of blockchain. Scorex gives the underlying framework for developing any of the three applications (and several others) by writing a thin layer of code. 
+In order to understand Scorex, it is helpful to consider Bitcoin, Namecoin and Ethereum as three distinct applications of the blockchain. Scorex gives the underlying framework for developing any of the three applications (and several others) by writing a thin layer of code. 
 
 \begin{enumerate}
 	\item {\em Bitcoin:} Decentralized currency~\cite{Nakamoto2008}.
@@ -479,7 +479,7 @@ Below are the cryptographic primitives needed to construct blockchain systems de
 	
 	\item {\em Non-Interactive Zero-Knowledge (NIZK) Proofs:} Let $N$ be an instance of any NP problem, such as finding the factors of a large integer. Let $P$ be a witness to this problem that Alice knows. 
 	
-	There are three requirements of NIZK proofs (of knowledge): (1) Given a \textbf{random} string $R$, Alice can construct a short proof $\pi=$ PROOF$(P, R)$ such that VERIFY$(\pi, R, N)=true$ iff Alice `really knows $P$'. The concept of `knowing' is captured as follows: (2) If Alice can be fooled into using a \textbf{maliciously crafted $R$}, then $\pi$ will reveal $P$ with a high probability. (3) Additionally, Alice can construct pairs $(\pi', R')$ such that VERIFY$(\pi', R', N) = true$ without knowing any witness $P$ as long as \textbf{she selects $R'$}. Thus, the generation of $R$ is of outmost importance because if the verifier selects $R$, the secret is leaked and if the prover selects $R$ then the proof is not convincing. If given the transcript of a proof, we cannot distinguish between the cases (1) and (3), then the protocol is zero knowledge, intuitively because because given some $(\pi, R)$ pair, there is no way of knowing if it was generated using (1) or (3). An example of a NIZK proof is given in Appendix A.
+	There are three requirements of NIZK proofs (of knowledge): (1) Given a \textbf{random} string $R$, Alice can construct a short proof $\pi=$ PROOF$(P, R)$ such that VERIFY$(\pi, R, N)=true$ iff Alice `really knows $P$'. The concept of `knowing' is captured as follows: (2) If Alice can be fooled into using a \textbf{maliciously crafted $R$}, then $\pi$ will reveal $P$ with a high probability. (3) Additionally, Alice can construct pairs $(\pi', R')$ such that VERIFY$(\pi', R', N) = true$ without knowing any witness $P$ as long as \textbf{she selects $R'$}. Thus, the generation of $R$ is of outmost importance because if the verifier selects $R$, the secret is leaked and if the prover selects $R$ then the proof is not convincing. If given the transcript of a proof, we cannot distinguish between the cases (1) and (3), then the protocol is zero knowledge, intuitively because given some $(\pi, R)$ pair, there is no way of knowing if it was generated using (1) or (3). An example of a NIZK proof is given in Appendix A.
 \end{enumerate}
 
 %Add commitments, etc
@@ -489,7 +489,8 @@ Below are the cryptographic primitives needed to construct blockchain systems de
 
 In this section we define a generalized view of transactional semantics of a blockchain system. %The two foundational concepts here are \textit{minimal state} and \textit{transaction}.
 
-\subsection{Minimal State}     % section 1.1
+\subsection{Minimal State}
+\label{min-state}
 	Consider what a node does on receiving a transaction:
 
     \begin{enumerate}
@@ -818,11 +819,13 @@ Some of the alternate blockchain designs we described were:
 
 \section{Introduction}     
 
-Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code. What do you need to do in order to build something on Scorex is to provide implementations for all the abstract interfaces~(possibly reusing code previously written for our projects).
+Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code.
+What do you need to do in order to build something on top of Scorex is to provide implementations for all the abstract
+interfaces~(possibly reusing code previously written).
+
+Scorex is intended to build a full-node implementation, though other security models are possible~(e.g. SPV).
 
 \subsection{Scala Language}
-
-We will describe some concepts of Scala language in sections started with ``*''. If you already a Scala developer you can miss the sections. Experience with programming languages~(say, Java, C++, OCaml or Rust) is needed as we will explain Scala features used in code snippets provided very quickly. For a good introduction into the Scala language, please refer to~\cite{odersky2008programming}.
 
 Scala is functional, modular and also object-oriented language. There are several reasons to choose this language:
 \begin{enumerate}
@@ -833,7 +836,100 @@ Scala is functional, modular and also object-oriented language. There are severa
 	\item Scala has powerful type system. Scorex is using typing features of the language extensively.
 \end{enumerate}
 
-\section{State Elements}
+For a good introduction into the Scala language, please refer to~\cite{odersky2008programming}.
+
+\section{A Node View And Its Modification}
+
+The goal of a fullnode node is to get the same \textit{minimal state}~(see Section~\ref{min-state} for details) eventually for a version $h$ as other honest nodes and also obtain some specific information for the node users from the history and the state. To accomplish the goal, as described in the section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
+\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
+
+This component, a \textit{node view holder}, modifies a node view it holds on getting whether an offchain object, so an offchain transaction, or an on-chain object~(a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc.) we call \textit{persistent node view modifier}. Type signatures of a trait and its sub-components are as follows:
+
+\begin{lstlisting}
+trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
+	PMOD <: PersistentNodeViewModifier[P, TX]] extends Actor {
+
+  type SI <: SyncInfo
+  type HIS <: History[P, TX, PMOD, SI, HIS]
+  type MS <: MinimalState[P, _, TX, PMOD, MS]
+  type VL <: Vault[P, TX, PMOD, VL]
+  type MP <: MemoryPool[TX, MP]
+
+  type NodeView = (HIS, MS, VL, MP)
+\end{lstlisting}
+
+In the snippet above we can think about types and traits as of modules, where each module is possibly parametrized with other modules~(including self, this pattern is called 
+\textit{F-bounded polymorphism~\cite{}} and being using widely in the Scorex). A concrete parameter has to be derived from an upper-bound abstract interface~(for example, concrete minimal state representation has to be derived from the \textit{MinimalState} trait).
+
+\subsection{Node View Modifiers}
+
+A node view could be modified by applying a \textit{node view modifier} to it. The assumption we made in the design is that there are two kinds of node modifiers. One is \textit{offchain transaction} which is not a part of history log and so to be processed by a memory pool and a wallet only. Another kind is about a hierarchy of \textit{persistent node view modifiers}. In the simplest Bitcoin design the hierarchy is just about a Proof-of-Work block. In Rollerchain the hierarchy of log elements is about three kinds of objects: a blockheader, a state snapshot and a fullblock; with different validation and application rules.
+
+It is supposed that all the modifiers have identifiers of the same length~(to be set via \textit{application.conf} file with default value of 32 bytes). We argue that the assumption is reasonable as usually identifier is an output of a single hash function.  
+
+Implemented functionalities are getting an identifier and also getting a binary representation of a modifier and each kind of modifier should provide its identifier also:
+
+\begin{lstlisting}
+trait NodeViewModifier extends BytesSerializable with JsonSerializable {
+  ...
+
+  val modifierTypeId: ModifierTypeId
+
+  def id: ModifierId
+
+  lazy val bytes: Array[Byte] = ...
+}
+\end{lstlisting}
+
+We assume log elements in the persistent node view modifiers hierarchy should also refer to a parent. A persistent modifier also can carry transactions~(but that is optional): 
+
+\begin{lstlisting}
+trait PersistentNodeViewModifier[P <: Proposition, TX <: Transaction[P]] extends NodeViewModifier {
+
+  def parentId: ModifierId
+
+  // with Dotty is would be Seq[TX] | Nothing
+  def transactions: Option[Seq[TX]]
+}
+\end{lstlisting}
+
+
+\section{The State Design}
+
+\subsection{A Minimal State}
+A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so
+applicable to it or not. See section~\ref{min-state} for details.
+
+A signature of the \textit{MinimalState} is
+
+\begin{lstlisting}
+trait MinimalState[
+    P <: Proposition,
+    BX <: Box[P],
+    TX <: Transaction[P],
+    M <: PersistentNodeViewModifier[P, TX],
+    MS <: MinimalState[P, BX, TX, M, MS]
+] extends NodeViewComponent{
+  self: MS =>  
+  ...
+\end{lstlisting}
+
+Per our definition, we define methods to validate a transaction: 
+
+\begin{lstlisting}
+  def validate(transaction: TX): Try[Unit]
+
+  def isValid(tx: TX): Boolean = validate(tx).isSuccess
+\end{lstlisting}
+
+The trait also has methods to get a closed box~(see section~\ref{sect_box}), to apply a persistent modifier and to roll back to a previous version: 
+
+\begin{lstlisting}
+  def closedBox(boxId: Array[Byte]): Option[BX]
+  def applyModifier(mod: M): Try[MS]
+  def rollbackTo(version: VersionTag): Try[MS]
+\end{lstlisting}
+
 
 \subsection{Propositions and Proofs}
 
@@ -841,7 +937,7 @@ Blockchain can be thought of a mechanism to control access to some protected obj
 
 %In the first place, we are getting into a mechanism to protect binary objects, e.g. transaction outputs, from non-permissioned access. We protect an object with a \textit{proposition}. Then in order to make an action with an object it is needed to provide a \textit{proof} for its proposition. 
 
-A proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as:
+A proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as: 	
 
 \small{
 \begin{lstlisting}
@@ -871,6 +967,7 @@ trait ProofOfKnowledge[S <: Secret, P <: ProofOfKnowledgeProposition[S]]
 \end{lstlisting}
 
 \subsection{Box}
+\label{sect_box}
 
 A box is a minimal state element. An unspent output in Bitcoin is a box. An account in certain state in Nxt or Ethereum is also a box. Basically, a box is about some amount of tokens associated with it and also some proposition which protects a box from being spent by anyone but a party~(or parties) knowing how to satisfy the proposition. Thus the basic abstraction is as follows:
 
@@ -885,61 +982,97 @@ trait Box[P <: Proposition] extends BytesSerializable {
 }
 \end{lstlisting}
 
-\section{A Node View}
-
-\subsection{A Node View And A View Modifier}
-
-As described in the section~\ref{fullnodeview}, a node in a blockchain network has a view of the world comprising of four entities:
-\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
-
-This component, a \textit{node view holder}, modifies a node view it hold on getting whether an offchain object, so an offchain transaction, or an on-chain object, so a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc. Signatures of a trait and its sub-components are as follows:
-
-\begin{lstlisting}
-trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
-	PMOD <: PersistentNodeViewModifier[P, TX]] extends Actor {
-
-  type HIS <: History[P, TX, PMOD, HIS]
-  type MS <: MinimalState[P, _, TX, PMOD, MS]
-  type VL <: Vault[P, TX, VL]
-  type MP <: MemoryPool[TX, MP]
-
-
-  type NodeView = (HIS, MS, VL, MP)
-\end{lstlisting}
 
 \subsection{A History}
 
-\begin{lstlisting}
-\end{lstlisting}
-
-\subsection{A Minimal State}
-
-A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so
-applicable to it or not.
+At the very basic level, Scorex does not have a notion of a blockchain. This is done in order to support blocktrees and other non-linear structures. So Scorex has an abstract concept of \textit{history} defined by the trait \textit{History}.
 
 \begin{lstlisting}
+trait History[P <: Proposition,
+	TX <: Transaction[P],
+	PM <: PersistentNodeViewModifier[P, TX],
+	SI <: SyncInfo,
+	HT <: History[P, TX, PM, SI, HT]] extends NodeViewComponent 
 \end{lstlisting}
+
+A node continuosly tries to get alternative~(and possibly better) histories from the network around and also feed nodes with less developed history with locally stored modifiers. To provide an information on how much local history is developed, there is an abstract type \textit{SyncInfo} mentioned in the type signature of the \textit{History} trait. 
+
+
 
 \subsection{A Vault}
 
+A \textit{vault} is a storage for node-specific information. Usually this is about wallet functionality. The information is to be obtained via scanning whether an offchain transaction or a persistent modifier. A rollback is surely possible. Thus the interface of a vault is as follows.  
+
 \begin{lstlisting}
+trait Vault[P <: Proposition, 
+	TX <: Transaction[P],
+    PMOD <: PersistentNodeViewModifier[P, TX], 
+    V <: Vault[P, TX, PMOD, V]] extends NodeViewComponent {
+  self: V =>
+
+  type VersionTag = NodeViewModifier.ModifierId
+
+  def scanOffchain(tx: TX): V
+
+  def scanOffchain(txs: Seq[TX]): V
+
+  def scanPersistent(modifier: PMOD): V
+
+  def rollback(to: VersionTag): Try[V]
+}
 \end{lstlisting}
+
+Scorex also contains \textit{Wallet} interface derived from the \textit{Vault}, parametrized with types of secrets and their public images also.
+
+\begin{lstlisting}
+trait Wallet[P <: Proposition, 
+	TX <: Transaction[P], 
+	PMOD <: PersistentNodeViewModifier[P,TX], 
+	W <: Wallet[P, TX, PMOD, W]] extends Vault[P, TX, PMOD, W] {
+  self: W =>
+
+  type S <: Secret
+  type PI <: ProofOfKnowledgeProposition[S]
+
+  def generateNewSecret(): W
+
+  def historyTransactions: Seq[WalletTransaction[P, TX]]
+
+  def boxes(): Seq[WalletBox[P, _ <: Box[P]]]
+
+  def publicKeys: Set[PI]
+
+  def secrets: Set[S]
+
+  def secretByPublicImage(publicImage: PI): Option[S]
+}
+\end{lstlisting}
+
 
 \subsection{A Memory Pool}
 
+A memory pool holds transaction not included into blocks yet so unconfirmed. We omit its functions here~(as they are pretty trivial) and provide only the type signature of the trait.  
+
 \begin{lstlisting}
+trait MemoryPool[TX <: Transaction[_], M <: MemoryPool[TX, M]]
 \end{lstlisting}
 
-
-\section{Consensus Layer}
 
 \subsection{Block}
 
+It is possible to develop block-less system, the only requirement is to have a history which contains instances of persistence node view modifiers. Nevertheless, the basic interface for a block is provided as it is needed for almost all of imaginable application. In addition to \textit{identifier} and \textit{parent identifier} fields inherited from \textit{PersistentNodeViewModifier}, a \textit{Block} generic interface contains also a version~(we assume block format could change with time) and timestamp.
+
 \begin{lstlisting}
+trait Block[P <: Proposition, TX <: Transaction[P]]
+  extends PersistentNodeViewModifier[P, TX] with JsonSerializable {
 
+  def version: Version
+
+  def timestamp: Timestamp
+
+  ...
+}
 \end{lstlisting}
-
-\subsection{History and Blockchain}
 
 \section{Network Layer}
 
@@ -949,23 +1082,14 @@ Network layer in Scorex is simpler than in Bitcoin or Nxt.
 
 \subsection{Broadcasting Strategies}
 
-\subsection{View Synchronizing}
-
-\section{Ready Modules}
-There are few modules already implemented.
+\section{Examples}
+There are few examples included into the distribution.
 
 \subsection{Proof-of-Stake}
 Proof-of-Stake module contains implementations of two Proof-of-Stake consensus algorithms. 
 
-\subsection{Simple Transactions Module}
+\subsection{Hybrid Proof-of-Work / Proof-of-Stake implementation}
 
-Simplest Transactions Module contains an implementation of transactional module with only one kind of transactions, just tokens transfers from one public key to another.
-
-\subsection{Permacoin Implementation Module}
-
-The module contains an implementation of Permacoin consensus protocol~\cite{miller2014permacoin}.
-
-\section{Conclusion}
 
 \bibliographystyle{plain}
 \bibliography{sources}
