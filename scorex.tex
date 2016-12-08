@@ -993,24 +993,27 @@ trait History[P <: Proposition,
 	PM <: PersistentNodeViewModifier[P, TX],
 	SI <: SyncInfo,
 	HT <: History[P, TX, PM, SI, HT]] extends NodeViewComponent {
-		def isEmpty: Boolean
+		def isEmpty: Boolean	
 
-  def contains(id: ModifierId): Boolean = modifierById(id).isDefined
+	type ModifierIds = Seq[(ModifierTypeId, ModifierId)]	
 
-  def applicable(modifier: PM): Boolean = openSurfaceIds().exists(_ sameElements modifier.parentId)
+  	def contains(id: ModifierId): Boolean = modifierById(id).isDefined
 
-  def modifierById(modifierId: ModifierId): Option[PM]
+  	def applicable(modifier: PM): Boolean = 
+  		openSurfaceIds().exists(_ sameElements modifier.parentId)
 
-  def append(modifier: PM): Try[(HT, Option[RollbackTo[PM]])]
+  	def modifierById(modifierId: ModifierId): Option[PM]	
 
-  def openSurfaceIds(): Seq[ModifierId]
+  	def append(modifier: PM): Try[(HT, Option[RollbackTo[PM]])]
 
-  def continuationIds(from: Seq[(ModifierTypeId, ModifierId)], size: Int): Option[Seq[(ModifierTypeId, ModifierId)]]
+  	def openSurfaceIds(): Seq[ModifierId]
 
-  def syncInfo(answer: Boolean): SI
+  	def continuationIds(from: ModifierIds, size: Int): Option[ModifierIds]
 
-  def compare(other: SI): HistoryComparisonResult.Value	
-	}
+  	def syncInfo(answer: Boolean): SI
+
+  	def compare(other: SI): HistoryComparisonResult.Value	
+  }
 \end{lstlisting}
 
 The trait contains no any mention of block or a blockchain. In principle, it supports non-linear structures and many object types to make the log. 
@@ -1023,6 +1026,7 @@ trait SyncInfo extends BytesSerializable {
   def startingPoints: Seq[(NodeViewModifier.ModifierTypeId, NodeViewModifier.ModifierId)]
 }
 \end{lstlisting}
+
 
 
 
