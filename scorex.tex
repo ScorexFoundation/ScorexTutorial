@@ -1037,10 +1037,7 @@ object HistoryComparisonResult extends Enumeration {
 \end{lstlisting}
 
 
-
-Function \textit{openSurfaceIds} returns last block if a history is linear, otherwise it returns last blocks from a blocktree etc. That is why it is returning sequence of modifier identifiers~(Seq[ModifierId]). 
-
-
+Function \textit{openSurfaceIds} returns last block if a history is linear, otherwise it returns last blocks from a blocktree etc. That is why it is returning a sequence of modifier identifiers~(Seq[ModifierId]). The function \textit{continuationIds} returns modifiers after given. Again, if the history is linear, \textit{from} parameter is about just 1-element sequence~(we can not easily enforce that with the Scala type system, so an implementation should check that in runtime), otherwise, from could be about elements of different chains. The function returns modifiers after provided if found, otherwise \textit{None}. 
 
 
 
