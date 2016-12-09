@@ -1041,7 +1041,12 @@ If another peer is holding the same history, then \textit{compare} should return
 
 Function \textit{openSurfaceIds} returns last block if a history is linear, otherwise it returns last blocks from a blocktree etc. That is why it is returning a sequence of modifier identifiers~(Seq[ModifierId]). The function \textit{continuationIds} returns modifiers after given. Again, if the history is linear, \textit{from} parameter is about just 1-element sequence~(we can not easily enforce that with the Scala type system, so an implementation should check that in runtime), otherwise, from could be about elements of different chains. The function returns modifiers after provided if found, otherwise \textit{None}. 
 
-Function \textit{append} is trying to extend the history with a modifier given. It  
+Function \textit{append} is trying to extend the history with a modifier given. No any attempt could be successful~(for example, if history does not contain modifier's parent, or modifier is not valid, append must aborts). There is an optional side-effect of an application to be passed to other components of the node. That is a rollback, which provides information about a last modifier id \textit{to} after the rollback~(and before the application), sequence of modifier thrown away and also a sequence of blocks to be applied~(after \textit{to}):
+
+\begin{lstlisting}
+case class RollbackTo[PM <: PersistentNodeViewModifier[_, _]](to: ModifierId, thrown: Seq[PM], applied: Seq[PM])
+\end{lstlisting}
+
 
 \subsection{A Vault}
 
