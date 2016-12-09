@@ -997,8 +997,6 @@ trait History[P <: Proposition,
 
 	type ModifierIds = Seq[(ModifierTypeId, ModifierId)]	
 
-  	def contains(id: ModifierId): Boolean = modifierById(id).isDefined
-
   	def applicable(modifier: PM): Boolean = 
   		openSurfaceIds().exists(_ sameElements modifier.parentId)
 
@@ -1026,6 +1024,22 @@ trait SyncInfo extends BytesSerializable {
   def startingPoints: Seq[(NodeViewModifier.ModifierTypeId, NodeViewModifier.ModifierId)]
 }
 \end{lstlisting}
+
+Function \textit{compare} is checking a SyncInfo instance got from another party and returns one of \textit{HistoryComparisonResult} values provided below: 
+
+\begin{lstlisting}
+object HistoryComparisonResult extends Enumeration {
+  val Equal = Value(1)
+  val Younger = Value(2)
+  val Older = Value(3)
+  val Nonsense = Value(4)
+}
+\end{lstlisting}
+
+
+
+Function \textit{openSurfaceIds} returns last block if a history is linear, otherwise it returns last blocks from a blocktree etc. That is why it is returning sequence of modifier identifiers~(Seq[ModifierId]). 
+
 
 
 
