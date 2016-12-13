@@ -993,24 +993,25 @@ trait History[P <: Proposition,
 	PM <: PersistentNodeViewModifier[P, TX],
 	SI <: SyncInfo,
 	HT <: History[P, TX, PM, SI, HT]] extends NodeViewComponent {
-		def isEmpty: Boolean
+		def isEmpty: Boolean	
 
-  def contains(id: ModifierId): Boolean = modifierById(id).isDefined
+	type ModifierIds = Seq[(ModifierTypeId, ModifierId)]	
 
-  def applicable(modifier: PM): Boolean = openSurfaceIds().exists(_ sameElements modifier.parentId)
+  	def applicable(modifier: PM): Boolean = 
+  		openSurfaceIds().exists(_ sameElements modifier.parentId)
 
-  def modifierById(modifierId: ModifierId): Option[PM]
+  	def modifierById(modifierId: ModifierId): Option[PM]	
 
-  def append(modifier: PM): Try[(HT, Option[RollbackTo[PM]])]
+  	def append(modifier: PM): Try[(HT, Option[RollbackTo[PM]])]
 
-  def openSurfaceIds(): Seq[ModifierId]
+  	def openSurfaceIds(): Seq[ModifierId]
 
-  def continuationIds(from: Seq[(ModifierTypeId, ModifierId)], size: Int): Option[Seq[(ModifierTypeId, ModifierId)]]
+  	def continuationIds(from: ModifierIds, size: Int): Option[ModifierIds]
 
-  def syncInfo(answer: Boolean): SI
+  	def syncInfo(answer: Boolean): SI
 
-  def compare(other: SI): HistoryComparisonResult.Value	
-	}
+  	def compare(other: SI): HistoryComparisonResult.Value	
+  }
 \end{lstlisting}
 
 The trait contains no any mention of block or a blockchain. In principle, it supports non-linear structures and many object types to make the log. 
@@ -1020,10 +1021,32 @@ A node continuosly tries to get alternative~(and possibly better) histories from
 \begin{lstlisting}
 trait SyncInfo extends BytesSerializable {
   def answer: Boolean
-  def startingPoints: Seq[(NodeViewModifier.ModifierTypeId, NodeViewModifier.ModifierId)]
+  def startingPoints: History.ModifierIds
 }
 \end{lstlisting}
 
+Function \textit{compare} is checking a \textit{SyncInfo} instance got from another party and returns one of \textit{HistoryComparisonResult} values provided below: 
+
+\begin{lstlisting}
+object HistoryComparisonResult extends Enumeration {
+  val Equal = Value(1)
+  val Younger = Value(2)
+  val Older = Value(3)
+  val Nonsense = Value(4)
+}
+\end{lstlisting}
+
+If another peer is holding the same history, then \textit{compare} should return \textit{Equal}. If other peer's history is more developed than local then \textit{compare} returns \textit{Older}, if less developed - \textit{Younger}. If from \textit{SyncInfo} it is not possible to get other peer's hystory status, \textit{compare} should return \textit{Nonsense}. 
+
+
+Function \textit{openSurfaceIds} returns last block if a history is linear, otherwise it returns last blocks from a blocktree etc. That is why it is returning a sequence of modifier identifiers~(Seq[ModifierId]). The function \textit{continuationIds} returns modifiers after given. Again, if the history is linear, \textit{from} parameter is about just 1-element sequence~(we can not easily enforce that with the Scala type system, so an implementation should check that in runtime), otherwise, from could be about elements of different chains. The function returns modifiers after provided if found, otherwise \textit{None}. 
+
+Function \textit{append} is trying to extend the history with a modifier given. No any attempt could be successful~(for example, if history does not contain modifier's parent, or modifier is not valid, append must aborts). There is an optional side-effect of an application to be passed to other components of the node. That is a rollback, which provides information about a last modifier id \textit{to} after the rollback~(and before the application), sequence of modifier thrown away and also a sequence of blocks to be applied~(after \textit{to}):
+
+\begin{lstlisting}
+case class RollbackTo[PM <: PersistentNodeViewModifier[_, _]]
+	(to: ModifierId, thrown: Seq[PM], applied: Seq[PM])
+\end{lstlisting}
 
 
 \subsection{A Vault}
