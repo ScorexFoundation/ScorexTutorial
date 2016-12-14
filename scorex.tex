@@ -650,8 +650,6 @@ In most cases, the existence of blocktree is ignored and a node stores only one 
 One might ask that instead of discarding the lower score chains, why don't we store them as additional PoW enhancing the persistence of some common ancestor from the main chain. There are some proposals that consider this and explicitly use a blocktree. For example, in GHOST scoring function~\cite{sompolinsky2015secure} a chain with heaviest tree wins. 
 
 
-%\subsection{Consensus Layer Generalization}
-
 \subsection{Full Node View}
 \label{fullnodeview}
 
@@ -671,13 +669,6 @@ or from a remote peer. We can state some rules of node view  modification even f
 
 
 %[TODO: pseudocode? or Scala code in Scorex counter-part?]
-
-
-%\section{Peer-to-Peer Network}	
-%
-%Blockchain is maintained in a peer-to-peer network. For simplicity we are starting with a network where all the nodes [...]
-
-%\section{Incentives}
 
 
 
@@ -1126,11 +1117,29 @@ trait Block[P <: Proposition, TX <: Transaction[P]]
 
 \section{Network Layer}
 
-Network layer in Scorex is simpler than in Bitcoin or Nxt. 
+Network layer in Scorex is simpler than in Bitcoin or Nxt. It provides some basic functionality~(a half-baked protocol with possibility to inject new methods) and also a lot of settings in the \textit{p2p} section of the \textit{settings.json} file~(we will further refer to a setting in this section as to \textit{p2p/setting}). This part of the Scorex is massively using Akka~\cite{} actors-based messaging framework. 
+
+\subsection{Network Controller} 
+
+\textit{NetworkController} class controls all the network interactions. It binds to the port given in the \textit{p2p/port} setting, obtains own external address other peers can connect to~(it s not always available), connects to a peer by a request and handles incoming connections. It also routes messages from peers to higher levels of the core and back.
+
+\begin{lstlisting}
+\end{lstlisting}
+
+\subsection{Message Handler}
+
+\begin{lstlisting}
+\end{lstlisting}
 
 \subsection{Peer Discovery}
 
 \subsection{Broadcasting Strategies}
+
+\subsection{Peer Connection Handler}
+
+\subsection{Message Specification}
+
+\subsection{Implementing }
 
 \section{Examples}
 There are few examples included into the distribution.
