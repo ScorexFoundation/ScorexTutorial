@@ -749,11 +749,11 @@ ByzCoin~\cite{kokorisposter} builds on the ideas of NG of separating the confirm
 
 The key difference with NG is that while a transaction is instantly confirmed in NG, it is not permanent in the case of dishonest miners because there is no control over how a miner generates micro-blocks. ByzCoin adds a level of consensus even for micro-blocks so the chance of those rolling back is negligible compared to NG.
 
-\subsection{Composite Signatures}
+\subsection{One-Way Aggregate Signatures}
 
-Composite signatures is an approach proposed in~\cite{saxena2014increasing} for enhancing anonymity (an earlier version of the paper calls it (One-Way Aggregate Signatures (OWAS)). Composite signatures are based on another primitive called Aggregate Signatures~\cite{boneh2003aggregate}. In this, several individual signatures can be combined into one short object -- the aggregate signature -- that can be verified against all the (public-key, message) pairs of the individual signatures and the verification yields true if and only if all the individual (public-key, message, signature) triplets verified correctly before aggregation. This itself has the advantage of reducing the sizes of very large transactions by compacting the signature. 
+One-Way Aggregate Signatures (OWAS), also called {\em composite signatures}, is an approach proposed in~\cite{saxena2014increasing} for enhancing anonymity. OWAS are based on another primitive called Aggregate Signatures~\cite{boneh2003aggregate}. In this, several individual signatures can be combined into one short object -- the aggregate signature -- that can be verified against all the (public-key, message) pairs of the individual signatures and the verification yields true if and only if all the individual (public-key, message, signature) triplets verified correctly before aggregation. This itself has the advantage of reducing the sizes of very large transactions by compacting the signature. 
 
-Aggregate signatures, however, can be tweaked so that the aggregation process becomes one-way; given just the aggregate signature, it is very hard to extract the constituents. This gives someone the ability to aggregate two unrelated signatures so that no one can later separate them. Composite signatures use this idea to combine a signed input (which releases Satoshis from an address) with an unrelated output (which consumes those Satoshis) such that at the time of signing, the holder of the Satoshis may not even know who the recipient is. For instance, the sender could simply sign a input releasing the Satoshis and hand it over to some (possibly unknown) receiver over a private channel without specifying in the signature where the Satoshis should go. This is equivalent to handing out a ``blank cheque''. The receiver can then add an arbitrary signature sending those Satoshis to some address. This can be further combined with more such transactions over a private network before sending the large transaction to the public network. There can be various mechanisms of doing the private computation (such as sending it to an aggregator).
+Aggregate signatures, however, can be tweaked so that the aggregation process becomes one-way; given just the aggregate signature, it is very hard to extract the constituents. This gives someone the ability to aggregate two unrelated signatures so that no one can later separate them. OWAS use this idea to combine a signed input (which releases Satoshis from an address) with an unrelated output (which consumes those Satoshis) such that at the time of signing, the holder of the Satoshis may not even know who the recipient is. For instance, the sender could simply sign a input releasing the Satoshis and hand it over to some (possibly unknown) receiver over a private channel without specifying in the signature where the Satoshis should go. This is equivalent to handing out a ``blank cheque''. The receiver can then add an arbitrary signature sending those Satoshis to some address. This can be further combined with more such transactions over a private network before sending the large transaction to the public network. There can be various mechanisms of doing the private computation (such as sending it to an aggregator).
 
 
 \section{ZeroCash}
@@ -810,11 +810,9 @@ Some of the alternate blockchain designs we described were:
 
 \section{Introduction}     
 
-Scorex is a modular blockchain core framework. It supports definitions given in the previous chapter in form of Scala code.
-What do you need to do in order to build something on top of Scorex is to provide implementations for all the abstract
-interfaces~(possibly reusing code previously written).
-
-Scorex is intended to build a full-node implementation, though other security models are possible~(e.g. SPV).
+Scorex is a modular blockchain core framework. It supports the definitions given in the previous chapter in the form of Scala code.
+In order to build something using scorex, all a developer must do is provide concrete implementations for all the abstract
+types, possibly reusing code previously written. Although Scorex is designed to build a full-node implementation, other security models such as SPV are possible.
 
 \subsection{Scala Language}
 
@@ -831,10 +829,15 @@ For a good introduction into the Scala language, please refer to~\cite{odersky20
 
 \section{A Node View And Its Modification}
 
-The goal of a fullnode node is to get the same \textit{minimal state}~(see Section~\ref{min-state} for details) eventually for a version $h$ as other honest nodes and also obtain some specific information for the node users from the history and the state. To accomplish the goal, as described in the section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
-\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
+The goal of a fullnode node is to compute the same \textit{minimal state}~(see Section~\ref{min-state}) as other honest nodes for some version $h$. It also holds local information derived from the history and state, which is specific to its user. To accomplish these goals, described in Section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
 
-This component, a \textit{node view holder}, modifies a node view it holds on getting whether an offchain object, so an offchain transaction, or an on-chain object~(a block, or key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain etc.) we call \textit{persistent node view modifier}. Type signatures of a trait and its sub-components are as follows:
+\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). 
+
+\anote{Not clear what the below sentence means.}
+
+In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
+
+A \textit{node view holder} is a component that manages and updates this view when it receives either an offchain object (such as an offchain transaction), or an on-chain object~(such as a block (header), a key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain). We call such a object a \textit{persistent node view modifier} having a signature of the following type:
 
 \begin{lstlisting}
 trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
@@ -849,8 +852,8 @@ trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
   type NodeView = (HIS, MS, VL, MP)
 \end{lstlisting}
 
-In the snippet above we can think about types and traits as of modules, where each module is possibly parametrized with other modules~(including self, this pattern is called 
-\textit{F-bounded polymorphism~\cite{}} and being using widely in the Scorex). A concrete parameter has to be derived from an upper-bound abstract interface~(for example, concrete minimal state representation has to be derived from the \textit{MinimalState} trait).
+In the snippet, the types and traits are modules possibly parametrized with other modules~(including themselves\footnote{
+	This is called \textit{F-bounded polymorphism~\cite{f-bound}} and is widely used in Scorex.}). A concrete parameter has to be derived from an upper-bound abstract interface~(for example, concrete minimal state representation has to be derived from the \textit{MinimalState} trait).
 
 \subsection{Node View Modifiers}
 
