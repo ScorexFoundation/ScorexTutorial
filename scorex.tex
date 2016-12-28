@@ -857,11 +857,16 @@ In the snippet, the types and traits are modules possibly parametrized with othe
 
 \subsection{Node View Modifiers}
 
-A node view could be modified by applying a \textit{node view modifier} to it. The assumption we made in the design is that there are two kinds of node modifiers. One is \textit{offchain transaction} which is not a part of history log and so to be processed by a memory pool and a wallet only. Another kind is about a hierarchy of \textit{persistent node view modifiers}. In the simplest Bitcoin design the hierarchy is just about a Proof-of-Work block. In Rollerchain the hierarchy of log elements is about three kinds of objects: a blockheader, a state snapshot and a fullblock; with different validation and application rules.
+A node view can be modified by applying a \textit{node view modifier} to it. There are two kinds of node modifiers: 
 
-It is supposed that all the modifiers have identifiers of the same length~(to be set via \textit{application.conf} file with default value of 32 bytes). We argue that the assumption is reasonable as usually identifier is an output of a single hash function.  
+\begin{enumerate}
+	\item The first is an \textit{offchain transaction}, which is not part of any history log, and will be processed solely using a memory pool and a wallet. 
+	\item The second type is a hierarchy of \textit{persistent node view modifiers}. In Bitcoin, for example, the hierarchy contains the Proof-of-Work blocks. In Rollerchain, we have three different kinds of objects in the hierarchy: a blockheader, a state snapshot and a fullblock; with different validation and application rules.
 
-Implemented functionalities are getting an identifier and also getting a binary representation of a modifier and each kind of modifier should provide its identifier also:
+\end{enumerate}
+All modifiers have identifiers of the same length~(to be set via \textit{application.conf} file with a default value of 32 bytes). We argue that this assumption is reasonable because usually the identifier is the output of a single hash function.  
+
+A concrete implementation of a modifier must provide: (1) An type-identifer for the type of modifier, (2) An identifier for the modifier itself, and (3) A method giving a binary representation of the identifier:
 
 \begin{lstlisting}
 trait NodeViewModifier extends BytesSerializable with JsonSerializable {
@@ -875,10 +880,11 @@ trait NodeViewModifier extends BytesSerializable with JsonSerializable {
 }
 \end{lstlisting}
 
-We assume log elements in the persistent node view modifiers hierarchy should also refer to a parent. A persistent modifier also can carry transactions~(but that is optional): 
+Log elements in the persistent node view modifiers hierarchy refer to a parent. A persistent modifier can also contain transactions~(but that is optional): 
 
 \begin{lstlisting}
-trait PersistentNodeViewModifier[P <: Proposition, TX <: Transaction[P]] extends NodeViewModifier {
+trait PersistentNodeViewModifier[P <: Proposition, 
+         TX <: Transaction[P]] extends NodeViewModifier {
 
   def parentId: ModifierId
 
@@ -892,9 +898,7 @@ trait PersistentNodeViewModifier[P <: Proposition, TX <: Transaction[P]] extends
 
 \subsection{A Minimal State}
 A minimal state is a data structure which deterministically defines whether an arbitrary transaction is valid and so
-applicable to it or not. See section~\ref{min-state} for details.
-
-A signature of the \textit{MinimalState} is
+applicable to it or not. See section~\ref{min-state} for details. The signature of a \textit{MinimalState} is
 
 \begin{lstlisting}
 trait MinimalState[
@@ -908,7 +912,7 @@ trait MinimalState[
   ...
 \end{lstlisting}
 
-Per our definition, we define methods to validate a transaction: 
+Using our model, we define methods to validate a transaction: 
 
 \begin{lstlisting}
   def validate(transaction: TX): Try[Unit]
@@ -916,7 +920,7 @@ Per our definition, we define methods to validate a transaction:
   def isValid(tx: TX): Boolean = validate(tx).isSuccess
 \end{lstlisting}
 
-The trait also has methods to get a closed box~(see section~\ref{sect_box}), to apply a persistent modifier and to roll back to a previous version: 
+The trait also has methods to get a closed box~(see section~\ref{sect_box}), to apply a persistent modifier, and to roll back to a previous version: 
 
 \begin{lstlisting}
   def closedBox(boxId: Array[Byte]): Option[BX]
