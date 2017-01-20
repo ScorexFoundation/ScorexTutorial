@@ -831,13 +831,9 @@ For a good introduction into the Scala language, please refer to~\cite{odersky20
 
 The goal of a fullnode node is to compute the same \textit{minimal state}~(see Section~\ref{min-state}) as other honest nodes for some version $h$. It also holds local information derived from the history and state, which is specific to its user. To accomplish these goals, described in Section~\ref{fullnodeview}, the node has a local view of the world comprising of four entities:
 
-\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \). 
+\(node\_view = \langle history, minimal\_state, vault, memory\_pool \rangle \) \\
 
-\anote{Not clear what the below sentence means.}
-
-In Scorex we assume there is a dedicated reactive component holding a view node with a direct modification of it from outside prohibited.
-
-A \textit{node view holder} is a component that manages and updates this view when it receives either an offchain object (such as an offchain transaction), or an on-chain object~(such as a block (header), a key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain). We call such a object a \textit{persistent node view modifier} having a signature of the following type:
+A \textit{node view holder} is a component that manages and updates this view when it receives either an offchain object (such as an offchain transaction), or an on-chain object~(such as a block (header), a key-block/micro-block in Bitcoin-NG, a blockheader/fullblock/state-snapshot in RollerChain). We refer to an object of the latter kind as to \textit{persistent node view modifier}. Node view and its holder have following type signatures:
 
 \begin{lstlisting}
 trait NodeViewHolder[P <: Proposition, TX <: Transaction[P],
@@ -860,7 +856,7 @@ In the snippet, the types and traits are modules possibly parametrized with othe
 A node view can be modified by applying a \textit{node view modifier} to it. There are two kinds of node modifiers: 
 
 \begin{enumerate}
-	\item The first is an \textit{offchain transaction}, which is not part of any history log, and will be processed solely using a memory pool and a wallet. 
+	\item The first is an \textit{offchain transaction}, which is not part of any history log, and will be processed by using only a memory pool and a wallet. 
 	\item The second type is a hierarchy of \textit{persistent node view modifiers}. In Bitcoin, for example, the hierarchy contains the Proof-of-Work blocks. In Rollerchain, we have three different kinds of objects in the hierarchy: a blockheader, a state snapshot and a fullblock; with different validation and application rules.
 
 \end{enumerate}
@@ -932,8 +928,6 @@ The trait also has methods to get a closed box~(see section~\ref{sect_box}), to 
 \subsection{Propositions and Proofs}
 
 Blockchain can be thought of a mechanism to control access to some protected objects (such as transaction outputs). An object is protected by a {\em proposition} and a {\em proof} for that proposition is needed in order to modify the object.
-
-%In the first place, we are getting into a mechanism to protect binary objects, e.g. transaction outputs, from non-permissioned access. We protect an object with a \textit{proposition}. Then in order to make an action with an object it is needed to provide a \textit{proof} for its proposition. 
 
 A proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as: 	
 
