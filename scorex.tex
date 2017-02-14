@@ -908,7 +908,7 @@ trait MinimalState[
   ...
 \end{lstlisting}
 
-Using our model, we define methods to validate a transaction: 
+Per definition, we define methods to validate a transaction: 
 
 \begin{lstlisting}
   def validate(transaction: TX): Try[Unit]
@@ -927,7 +927,7 @@ The trait also has methods to get a closed box~(see section~\ref{sect_box}), to 
 
 \subsection{Propositions and Proofs}
 
-Blockchain can be thought of a mechanism to control access to some protected objects (such as transaction outputs). An object is protected by a {\em proposition} and a {\em proof} for that proposition is needed in order to modify the object.
+Blockchain can be thought as a mechanism to control access to some protected objects (such as transaction outputs). An object is protected by a {\em proposition} and a {\em proof} for that proposition is needed in order to modify the object.
 
 A proposition is a very abstract concept. The only property we require from it is to be serialized into bytes. In form of Scala code it is described as: 	
 
