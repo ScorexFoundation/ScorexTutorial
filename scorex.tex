@@ -369,7 +369,7 @@ The different sections are identified by alternating underlines:
 If the currently processing row has two or more nodes, we first ensure that there are even number (say $n$) of them, by adding a null element if necessary. Then we pair the nodes to form $n/2$ pairs. Each pair $(L, R)$ is concatenated and its hash $\texttt{SHA256}(L||R)$ forms the parent for the next iteration. This process is repeated until the root is reached. 
 
 
-\paragraph{Payload:} The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same orders as in the Merkle tree.
+\paragraph{Payload:} The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same order as in the Merkle tree.
 
 
 \paragraph{Consensus rules:} A client rejects block that do not follow the below rules:
