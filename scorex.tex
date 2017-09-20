@@ -227,7 +227,7 @@ where $ref_{A_i\leftarrow x_i}$ are references to $n$ previous transaction outpu
 %\[\mbox{Inputs }\defined A_i\sr{ref_i}{\ra} x_i~~~~~~~~(1\leq i \leq n)\] 
 %\[\mbox{Outputs }\defined B_i \la y_i~~~~~~~~(1\leq i \leq l)\]
 A valid transaction $tx$ is a tuple: 
-\begin{equation}\label{tx0}tx\defined (M, \sigma_{A_1}(M), \sigma_{A_2}(M), \ldots, \sigma_{A_n}(M))\end{equation} such that each signature $\sigma_{A_i}(M)$ verifies correctly and the following holds:
+\begin{equation}\label{tx0}tx\defined (M, \sigma_{A_1}(M), \sigma_{A_2}(M), \ldots, \sigma_{A_n}(M))\end{equation} such that each signature $\sigma_{A_i}(M)$ is correctly verified by the public key $A_i$ and the following holds:
 \begin{enumerate}
 	\item $\sum_{i=1}^{l}y_i \leq \sum_{i=1}^{n}x_i$ 
 	\item Each $ref_{A_i \leftarrow x_i}$ for $1\leq i\leq n$ was never used in any prior transaction.
