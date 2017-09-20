@@ -556,7 +556,7 @@ This basic design has a critical flaw. If a miner processing a name-register box
 
 Bitcoin has the concept of immutable UTXOs and a Script-based structure for validating public-key and signatures. We can also conceive of a simpler model model where the ledger maps public keys to their balances and transactions to Satoshis transferred between the accounts. We can also have hard-wired semantics that validate public-key and signatures instead of Script code.
 
-Nxt and Ethereum are two examples of such designs, which use the term {\em account} to define a public-key. A transaction transfers tokens from one account to another and needs to be signed by the sender. For such a system, the minimal state is a table holding a correspondence between accounts and their balances.
+Nxt and Ethereum are two examples of such designs, which use the term {\em account} to refer to a public-key. A transaction transfers tokens from one account to another and needs to be signed by the sender. For such a system, the minimal state is a table holding a correspondence between accounts and their balances.
 
 This simple explanation, however, has a critical flaw. Suppose Alice has 50 tokens at some time. She issues a signed transaction to pay 5 tokens to Bob. A node will find this valid, and therefore, applicable. After the application Alice has 45 tokens. However, Bob or anyone else can now {\em replay} the same transaction again and again till Alice's account is empty. Our minimal state representation seems to be flawed.
 
