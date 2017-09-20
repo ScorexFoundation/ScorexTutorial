@@ -210,7 +210,7 @@ Let us define the following notation:
 \item
 $X \leftarrow x$ is the message ``put $x$ in $X$''. This is an output.
 \item
-$\sigma_X(m)$ is signature on message $m$ under public key $X$. %That is, public key $X$ is used to verify the signature.
+$\sigma_X(m)$ is signature on message $m$ with the private key corresponding to the public key $X$. %That is, public key $X$ is used to verify the signature.
 \end{itemize}
 Alice's transaction is then $(m, \sigma_A(m))$, where $m  =  (ref_{A \leftarrow x}, B \lea y, C \lea z)$.
  
