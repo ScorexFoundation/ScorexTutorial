@@ -210,7 +210,7 @@ Let us define the following notation:
 \item
 $X \leftarrow x$ is the message ``put $x$ in $X$''. This is an output.
 \item
-$\sigma_X(m)$ is signature on message $m$ under public key $X$. %That is, public key $X$ is used to verify the signature.
+$\sigma_X(m)$ is signature on message $m$ with the private key corresponding to the public key $X$. %That is, public key $X$ is used to verify the signature.
 \end{itemize}
 Alice's transaction is then $(m, \sigma_A(m))$, where $m  =  (ref_{A \leftarrow x}, B \lea y, C \lea z)$.
  
@@ -227,7 +227,7 @@ where $ref_{A_i\leftarrow x_i}$ are references to $n$ previous transaction outpu
 %\[\mbox{Inputs }\defined A_i\sr{ref_i}{\ra} x_i~~~~~~~~(1\leq i \leq n)\] 
 %\[\mbox{Outputs }\defined B_i \la y_i~~~~~~~~(1\leq i \leq l)\]
 A valid transaction $tx$ is a tuple: 
-\begin{equation}\label{tx0}tx\defined (M, \sigma_{A_1}(M), \sigma_{A_2}(M), \ldots, \sigma_{A_n}(M))\end{equation} such that each signature $\sigma_{A_i}(M)$ verifies correctly and the following holds:
+\begin{equation}\label{tx0}tx\defined (M, \sigma_{A_1}(M), \sigma_{A_2}(M), \ldots, \sigma_{A_n}(M))\end{equation} such that each signature $\sigma_{A_i}(M)$ is correctly verified by the public key $A_i$ and the following holds:
 \begin{enumerate}
 	\item $\sum_{i=1}^{l}y_i \leq \sum_{i=1}^{n}x_i$ 
 	\item Each $ref_{A_i \leftarrow x_i}$ for $1\leq i\leq n$ was never used in any prior transaction.
@@ -366,10 +366,10 @@ The different sections are identified by alternating underlines:
 \end{enumerate}
 	
 \paragraph{Computing the Merkle root:} The transactions are first arranged in some order that satisfies the consensus rules given below. Their transaction hashes (TXIDs) are considered as the last row (leaves) of the tree that will be constructed. Starting with the last row, each row is iteratively processed to get the previous (parent) row until the currently processing row has only one node, the Merkle root. 
-If the currently processing row has two or more nodes, we first ensure that there are even number (say $n$) of them, by adding a null element if necessary. Then we pair the nodes to form $n/2$ pairs. Each pair $(L, R)$ is concatenated and its hash $\texttt{SHA256}(\texttt{SHA256}(L||R))$ forms the parent for the next iteration. This process is repeated until the root is reached. 
+If the currently processing row has two or more nodes, we first ensure that there are even number (say $n$) of them, by adding a null element if necessary. Then we pair the nodes to form $n/2$ pairs. Each pair $(L, R)$ is concatenated and its hash $\texttt{SHA256}(L||R)$ forms the parent for the next iteration. This process is repeated until the root is reached. 
 
 
-\paragraph{Payload:} The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same orders as in the Merkle tree.
+\paragraph{Payload:} The first field of the payload defines the number of transactions. The rest of the payload contains the raw transactions concatenated in the same order as in the Merkle tree.
 
 
 \paragraph{Consensus rules:} A client rejects block that do not follow the below rules:
@@ -556,7 +556,7 @@ This basic design has a critical flaw. If a miner processing a name-register box
 
 Bitcoin has the concept of immutable UTXOs and a Script-based structure for validating public-key and signatures. We can also conceive of a simpler model model where the ledger maps public keys to their balances and transactions to Satoshis transferred between the accounts. We can also have hard-wired semantics that validate public-key and signatures instead of Script code.
 
-Nxt and Ethereum are two examples of such designs, which use the term {\em account} to define a public-key. A transaction transfers tokens from one account to another and needs to be signed by the sender. For such a system, the minimal state is a table holding a correspondence between accounts and their balances.
+Nxt and Ethereum are two examples of such designs, which use the term {\em account} to refer to a public-key. A transaction transfers tokens from one account to another and needs to be signed by the sender. For such a system, the minimal state is a table holding a correspondence between accounts and their balances.
 
 This simple explanation, however, has a critical flaw. Suppose Alice has 50 tokens at some time. She issues a signed transaction to pay 5 tokens to Bob. A node will find this valid, and therefore, applicable. After the application Alice has 45 tokens. However, Bob or anyone else can now {\em replay} the same transaction again and again till Alice's account is empty. Our minimal state representation seems to be flawed.
 
